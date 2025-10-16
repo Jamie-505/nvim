@@ -1,0 +1,80 @@
+-- vertical buffer line
+return {
+  -- 'aidancz/buvvers.nvim',
+  -- dependencies = {
+  --   'nvim-tree/nvim-web-devicons',
+  -- },
+  -- keys = {
+  --   {
+  --     '<leader>tb',
+  --     function()
+  --       require('buvvers').toggle()
+  --     end,
+  --     desc = 'Toggle Vertical buffer list',
+  --   },
+  -- },
+  -- opts = {
+  --   buffer_handle_list_to_buffer_name_list = function(handle_l)
+  --     local name_l
+  --
+  --     local default_function = require('buvvers.buffer_handle_list_to_buffer_name_list')
+  --     name_l = default_function(handle_l)
+  --
+  --     for n, name in ipairs(name_l) do
+  --       -- modified prefix
+  --       local table_to_add = {}
+  --       local is_modified = vim.api.nvim_get_option_value('modified', { buf = handle_l[n] })
+  --       local prefix
+  --       if is_modified then
+  --         prefix = '  '
+  --       else
+  --         prefix = ''
+  --       end
+  --       table.insert(table_to_add, { prefix, 'BuvversModifiedIcon' })
+  --       -- filetype icon
+  --       local ok, devicons = pcall(require, 'nvim-web-devicons')
+  --       local icon = nil
+  --       local hl = nil
+  --       if ok then
+  --         local filetype = vim.filetype.match({ filename = name })
+  --         local fetched_icon, fetched_hl = devicons.get_icon_by_filetype(filetype, { default = false })
+  --         icon = fetched_icon
+  --         hl = fetched_hl
+  --       end
+  --       if icon ~= nil then
+  --         local icon_table = { icon .. ' ' }
+  --         if hl ~= nil then
+  --           table.insert(icon_table, hl)
+  --         end
+  --         table.insert(table_to_add, icon_table)
+  --       end
+  --       -- filename
+  --       table.insert(table_to_add, name)
+  --
+  --       name_l[n] = table_to_add
+  --     end
+  --
+  --     return name_l
+  --   end,
+  -- },
+  -- config = function(_, opts)
+  --   vim.api.nvim_set_hl(0, 'BuvversModifiedIcon', {
+  --     fg = '#50fed8',
+  --   })
+  --   require('buvvers').setup(opts)
+  --   local add_autocmds = function()
+  --     vim.api.nvim_create_autocmd({
+  --       'BufModifiedSet',
+  --     }, {
+  --       group = 'buvvers',
+  --       callback = require('buvvers').buvvers_open,
+  --     })
+  --   end
+  --   vim.api.nvim_create_augroup('buvvers_config', { clear = true })
+  --   vim.api.nvim_create_autocmd('User', {
+  --     group = 'buvvers_config',
+  --     pattern = 'BuvversAutocmdEnabled',
+  --     callback = add_autocmds,
+  --   })
+  -- end,
+}

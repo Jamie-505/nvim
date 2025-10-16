@@ -1,0 +1,9 @@
+- [ ] adjust colors / highlight groups
+  - [ ] search result is red
+  - [ ] gray background in some places
+- [X] make inline hints toggleable
+- [ ] make auto formatter toggleable
+- [ ] set spell always on
+- [ ] make resize sensible (smart-splits)
+- [ ] debug ui layout
+- [ ] make cmd line movable
