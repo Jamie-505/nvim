@@ -1,0 +1,21 @@
+return {
+  -- 'folke/persistence.nvim',
+  -- lazy = false,
+  -- opts = {},
+  -- keys = {
+  --   {
+  --     '<leader>sl',
+  --     function()
+  --       require('persistence').load()
+  --     end,
+  --     desc = 'Load last session',
+  --   },
+  --   {
+  --     '<leader>ss',
+  --     function()
+  --       require('persistence').select()
+  --     end,
+  --     desc = 'Select session',
+  --   },
+  -- },
+}
