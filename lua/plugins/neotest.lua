@@ -85,7 +85,7 @@ return {
         }),
         require('neotest-gradle'),
         require('neotest-jest')({
-          jestCommand = require('neotest-jest.jest-util').getJestCommand(vim.fn.expand('%:p:h')),
+          jestCommand = 'npm test --',
           jestConfigFile = function(file)
             if string.find(file, '/packages/') then
               return string.match(file, '(.-/[^/]+/)src') .. 'jest.config.ts'

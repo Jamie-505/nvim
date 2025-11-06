@@ -58,8 +58,8 @@ return {
         desc = 'Diagnostics Diagnostics Current Buf',
       },
       -- Other
-      { '<leader>fb', '<cmd>Telescope buffers<CR>', desc = 'Telescope Buffers' },
-      { '<leader>fhe', '<cmd>Telescope help_tags<CR>', desc = 'Telescope Help page' },
+      { '<leader>fb', '<CMD>Telescope buffers<CR>', desc = 'Telescope Buffers' },
+      { '<leader>fhe', '<CMD>Telescope help_tags<CR>', desc = 'Telescope Help page' },
       {
         '<leader>fo',
         function()
@@ -67,14 +67,14 @@ return {
         end,
         desc = 'Telescope Oldfiles in cwd',
       },
-      { '<leader>fz', '<cmd>Telescope current_buffer_fuzzy_find<CR>', desc = 'Telescope Current Buffer' },
-      { '<leader>fgc', '<cmd>Telescope git_commits<CR>', desc = 'Telescope Git commits' },
-      { '<leader>fgt', '<cmd>Telescope git_status<CR>', desc = 'Telescope Git status' },
-      { '<leader>fgh', '<cmd>Telescope git_file_history<CR>', desc = 'Telescope Git file history' },
-      { '<leader>fte', '<cmd>Telescope terms<CR>', desc = 'Telescope Terminals' },
+      { '<leader>fz', '<CMD>Telescope current_buffer_fuzzy_find<CR>', desc = 'Telescope Current Buffer' },
+      { '<leader>fgc', '<CMD>Telescope git_commits<CR>', desc = 'Telescope Git commits' },
+      { '<leader>fgt', '<CMD>Telescope git_status<CR>', desc = 'Telescope Git status' },
+      { '<leader>fgh', '<CMD>Telescope git_file_history<CR>', desc = 'Telescope Git file history' },
+      { '<leader>fte', '<CMD>Telescope terms<CR>', desc = 'Telescope Terminals' },
       {
         '<leader>fa',
-        '<cmd>Telescope find_files follow=true no_ignore=true hidden=true<CR>',
+        '<CMD>Telescope find_files follow=true no_ignore=true hidden=true<CR>',
         desc = 'Telescope Files (all)',
       },
       {
@@ -84,18 +84,18 @@ return {
         end,
         desc = 'Telescope Registers',
       },
-      { '<leader>fj', '<cmd>Telescope jumplist<CR>', desc = 'Telescope Jumplist' },
-      { '<leader>fco', '<cmd>Telescope commands<CR>', desc = 'Telescope Commands' },
-      { '<leader>fch', '<cmd>Telescope command_history<CR>', desc = 'Telescope Command history' },
-      { '<leader>fv', '<cmd>Telescope vim_options<CR>', desc = 'Telescope Vim Options' },
-      -- { "<leader>fsy", "<cmd>Telescope treesitter<CR>", desc = "Telescope Symbols" },
-      { '<leader>fsy', '<cmd>Telescope lsp_document_symbols<CR>', desc = 'Telescope Symbols' },
-      { '<leader>fr', '<cmd>Telescope resume<CR>', desc = 'Telescope Resume last search' },
-      { '<leader>fk', '<cmd>Telescope keymaps<CR>', desc = 'Telescope Keybindings' },
-      { '<leader>fma', '<cmd>Telescope marks<CR>', desc = 'Telescope Marks' },
-      { '<leader>fgs', '<cmd>Telescope grep_string<CR>', mode = { 'n', 'v' }, desc = 'Telescope Grep String' },
-      { '<leader>fsp', '<cmd>Telescope spell_suggest<CR>', desc = 'Telescope Spell suggest' },
-      { '<leader>fp', '<cmd>Telescope pickers<CR>', desc = 'Telescope Pickers' },
+      { '<leader>fj', '<CMD>Telescope jumplist<CR>', desc = 'Telescope Jumplist' },
+      { '<leader>fco', '<CMD>Telescope commands<CR>', desc = 'Telescope Commands' },
+      { '<leader>fch', '<CMD>Telescope command_history<CR>', desc = 'Telescope Command history' },
+      { '<leader>fv', '<CMD>Telescope vim_options<CR>', desc = 'Telescope Vim Options' },
+      -- { "<leader>fsy", "<CMD>Telescope treesitter<CR>", desc = "Telescope Symbols" },
+      { '<leader>fsy', '<CMD>Telescope lsp_document_symbols<CR>', desc = 'Telescope Symbols' },
+      { '<leader>fr', '<CMD>Telescope resume<CR>', desc = 'Telescope Resume last search' },
+      { '<leader>fk', '<CMD>Telescope keymaps<CR>', desc = 'Telescope Keybindings' },
+      { '<leader>fma', '<CMD>Telescope marks<CR>', desc = 'Telescope Marks' },
+      { '<leader>fgs', '<CMD>Telescope grep_string<CR>', mode = { 'n', 'v' }, desc = 'Telescope Grep String' },
+      { '<leader>fsp', '<CMD>Telescope spell_suggest<CR>', desc = 'Telescope Spell suggest' },
+      { '<leader>fp', '<CMD>Telescope pickers<CR>', desc = 'Telescope Pickers' },
       {
         '<leader>fz',
         function()
@@ -113,7 +113,7 @@ return {
         mode = { 'v' },
         desc = 'Telescope Current Buffer',
       },
-      { '<leader>fhi', '<cmd>Telescope highlights<CR>', desc = 'Telescope Highlights' },
+      { '<leader>fhi', '<CMD>Telescope highlights<CR>', desc = 'Telescope Highlights' },
     },
     opts = function()
       local function flash(prompt_bufnr)
@@ -255,7 +255,7 @@ return {
     'nvim-telescope/telescope-live-grep-args.nvim',
     dependencies = { 'nvim-telescope/telescope.nvim' },
     keys = {
-      { '<leader>fw', '<cmd>Telescope live_grep_args<CR>', desc = 'Telescope Live grep' },
+      { '<leader>fw', '<CMD>Telescope live_grep_args<CR>', desc = 'Telescope Live grep' },
     },
     opts = function()
       local lga_actions = require('telescope-live-grep-args.actions')
@@ -303,7 +303,7 @@ return {
     event = { 'BufReadPost', 'BufNewFile' },
     cmd = 'TodoTelescope',
     keys = {
-      { '<leader>fto', '<cmd>TodoTelescope<CR>', desc = 'Telescope TODOs' },
+      { '<leader>fto', '<CMD>TodoTelescope<CR>', desc = 'Telescope TODOs' },
     },
     config = function()
       require('todo-comments').setup()
@@ -313,7 +313,7 @@ return {
     'isak102/telescope-git-file-history.nvim',
     dependencies = { 'nvim-telescope/telescope.nvim' },
     keys = {
-      { '<leader>fgi', '<cmd>Telescope git_file_history<CR>', desc = 'Telescope Git file history' },
+      { '<leader>fgi', '<CMD>Telescope git_file_history<CR>', desc = 'Telescope Git file history' },
     },
     config = function()
       require('telescope').load_extension('git_file_history')
@@ -365,7 +365,7 @@ return {
   --   keys = {
   --     {
   --       "<leader>u",
-  --       "<cmd>Telescope undo<cr>",
+  --       "<CMD>Telescope undo<CR>",
   --       desc = "Telescope Undo history",
   --     },
   --   },

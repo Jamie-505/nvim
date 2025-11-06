@@ -2,9 +2,9 @@ return {
   'rmagatti/auto-session',
   lazy = false,
   keys = {
-    { '<leader>sl', '<cmd>AutoSession restore<CR>', desc = 'Session Restore last in cwd' },
-    { '<leader>fse', '<cmd>AutoSession search<CR>', desc = 'Telescope Sessions' },
-    { '<leader>sd', '<cmd>AutoSession delete<CR>', desc = 'Session Delete current session' },
+    { '<leader>sl', '<CMD>AutoSession restore<CR>', desc = 'Session Restore last in cwd' },
+    { '<leader>fse', '<CMD>AutoSession search<CR>', desc = 'Telescope Sessions' },
+    { '<leader>sd', '<CMD>AutoSession delete<CR>', desc = 'Session Delete current session' },
   },
   ---enables autocomplete for opts
   ---@module "auto-session"

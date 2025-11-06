@@ -22,7 +22,7 @@ return {
     },
     {
       '<leader>ti',
-      '<cmd>IBLToggle<CR>',
+      '<CMD>IBLToggle<CR>',
       desc = 'Toggle Indentation lines',
     },
   },

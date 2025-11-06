@@ -1,7 +1,7 @@
 return {
   'jiaoshijie/undotree',
   keys = {
-    { '<leader>u', "<cmd>lua require('undotree').toggle()<cr>", desc = 'Toggle Undotree' },
+    { '<leader>u', "<CMD>lua require('undotree').toggle()<CR>", desc = 'Toggle Undotree' },
   },
   opts = {},
 }

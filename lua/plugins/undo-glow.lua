@@ -82,7 +82,7 @@ return {
   --   "uga-rosa/ccc.nvim",
   --   cmd = { "CccPick" },
   --   keys = {
-  --     { "<leader>ccc", "<cmd>CccPick<CR>", desc = "Colors Change color under cursor" },
+  --     { "<leader>ccc", "<CMD>CccPick<CR>", desc = "Colors Change color under cursor" },
   --   },
   --   opts = {},
   -- },
@@ -92,17 +92,17 @@ return {
     keys = {
       {
         '<leader>Th',
-        '<cmd>ToggleTerm direction=horizontal<CR>',
+        '<CMD>ToggleTerm direction=horizontal<CR>',
         desc = 'Terminal Toggle horizontal term',
       },
       {
         '<leader>Tv',
-        '<cmd>ToggleTerm direction=vertical size=60<CR>',
+        '<CMD>ToggleTerm direction=vertical size=60<CR>',
         desc = 'Terminal Toggle vertical term',
       },
       {
         '<leader>Tf',
-        '<cmd>ToggleTerm direction=float<CR>',
+        '<CMD>ToggleTerm direction=float<CR>',
         desc = 'Terminal Toggle floating term',
       },
     },

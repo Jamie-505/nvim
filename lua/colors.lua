@@ -22,4 +22,12 @@ M.set_colors = function(module_name)
   end
 end
 
+M.set_all_colors = function()
+  for _, module in pairs(M.color_modules) do
+    if module ~= nil then
+      module()
+    end
+  end
+end
+
 return M

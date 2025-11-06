@@ -13,8 +13,8 @@ return {
   },
   event = 'VeryLazy',
   keys = {
-    { '<leader>fn', '<cmd>Noice telescope<CR>', desc = 'Notifications Show history' },
-    -- { "<leader>dm", "<cmd>Noice dismiss<CR>", desc = "Noice Dismiss messages" },
+    { '<leader>fn', '<CMD>Noice telescope<CR>', desc = 'Notifications Show history' },
+    -- { "<leader>dm", "<CMD>Noice dismiss<CR>", desc = "Noice Dismiss messages" },
   },
   opts = {
     presets = {
@@ -36,7 +36,9 @@ return {
       },
     },
     cmdline = {
-      enabled = true,
+      format = {
+        input = { view = 'cmdline' },
+      },
     },
     notify = {
       enabled = true,

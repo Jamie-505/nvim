@@ -306,7 +306,7 @@ return {
     'mason-org/mason.nvim',
     cmd = { 'Mason', 'MasonInstall', 'MasonInstallAll', 'MasonUpdate' },
     keys = {
-      { 'M', '<cmd>Mason<CR>', desc = 'Mason Open' },
+      { 'M', '<CMD>Mason<CR>', desc = 'Mason Open' },
     },
     opts = function()
       return require('mason-opts')
@@ -439,7 +439,7 @@ return {
       {
         '<leader>lR',
         ':IncRename ',
-        desc = 'LSP IncRename',
+        desc = 'Lsp IncRename',
       },
     },
     opts = {
