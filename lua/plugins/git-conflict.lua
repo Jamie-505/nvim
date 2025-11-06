@@ -3,12 +3,12 @@ return {
   version = '*',
   event = 'BufReadPost',
   keys = {
-    { '<leader>cn', '<cmd>GitConflictNextConflict<CR>', desc = 'Git Conflict Next' },
-    { '<leader>cp', '<cmd>GitConflictPrevConflict<CR>', desc = 'Git Conflict Prev' },
-    { '<leader>co', '<cmd>GitConflictChooseOurs<CR>', desc = 'Git Conflict Choose Ours' },
-    { '<leader>ct', '<cmd>GitConflictChooseTheirs<CR>', desc = 'Git Conflict Choose Theirs' },
-    { '<leader>cb', '<cmd>GitConflictChooseBoth<CR>', desc = 'Git Conflict Choose Both' },
-    { '<leader>cl', '<cmd>GitConflictListQf<CR>', desc = 'Git Conflict List' },
+    { '<leader>cn', '<CMD>GitConflictNextConflict<CR>', desc = 'Git Conflict Next' },
+    { '<leader>cp', '<CMD>GitConflictPrevConflict<CR>', desc = 'Git Conflict Prev' },
+    { '<leader>co', '<CMD>GitConflictChooseOurs<CR>', desc = 'Git Conflict Choose Ours' },
+    { '<leader>ct', '<CMD>GitConflictChooseTheirs<CR>', desc = 'Git Conflict Choose Theirs' },
+    { '<leader>cb', '<CMD>GitConflictChooseBoth<CR>', desc = 'Git Conflict Choose Both' },
+    { '<leader>cl', '<CMD>GitConflictListQf<CR>', desc = 'Git Conflict List' },
   },
   opts = {
     default_mappings = false, -- disable buffer local mapping created by this plugin

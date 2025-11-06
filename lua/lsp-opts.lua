@@ -56,7 +56,7 @@ local function rename()
   vim.cmd('normal A')
   vim.cmd('startinsert')
 
-  map({ 'n' }, '<Esc>', '<cmd>q<CR>', { buffer = 0 })
+  map({ 'n' }, '<Esc>', '<CMD>q<CR>', { buffer = 0 })
 
   map({ 'i', 'n' }, '<CR>', function()
     apply_rename(currName, win)
@@ -448,6 +448,21 @@ M.defaults = function()
 
   -- TypeScript
   vim.lsp.config('ts_ls', {
+    on_attach = function(client, bufnr)
+      vim.api.nvim_buf_create_user_command(bufnr, 'OrganizeImports', function()
+        client:exec_cmd({
+          command = '_typescript.organizeImports',
+          arguments = { vim.api.nvim_buf_get_name(0) },
+        })
+      end, {})
+      vim.api.nvim_buf_set_keymap(
+        bufnr,
+        'n',
+        '<leader>loi',
+        '<CMD>OrganizeImports<CR>',
+        { desc = 'Lsp organize imports' }
+      )
+    end,
     init_options = {
       preferences = {
         includeInlayParameterNameHints = 'literal', -- 'none' | 'literals' | 'all'

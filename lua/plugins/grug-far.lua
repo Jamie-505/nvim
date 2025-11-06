@@ -5,12 +5,12 @@ return {
   keys = {
     {
       '<leader>S',
-      '<cmd>GrugFar<CR>',
+      '<CMD>GrugFar<CR>',
       desc = 'Search Open',
     },
     {
       '<leader>S',
-      "<cmd>'<,'>GrugFar<CR>",
+      "<CMD>'<,'>GrugFar<CR>",
       mode = { 'v' },
       desc = 'Search Selection',
     },

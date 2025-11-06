@@ -5,7 +5,7 @@ return {
   },
   cmd = { 'NvimTreeToggle', 'NvimTreeFocus' },
   keys = {
-    { '<C-n>', '<cmd>NvimTreeToggle<CR>', desc = 'NvimTree Toggle window' },
+    { '<C-n>', '<CMD>NvimTreeToggle<CR>', desc = 'NvimTree Toggle window' },
   },
   opts = {
     filters = {
@@ -93,6 +93,14 @@ return {
       vim.api.nvim_set_hl(0, 'NvimTreeCursorLine', {
         bg = '#474656',
       })
+      if vim.g.transparent_enabled then
+        vim.api.nvim_set_hl(0, 'NvimTreeWinSeparator', {
+          bg = 'NONE',
+        })
+        vim.api.nvim_set_hl(0, 'NvimTreeNormal', {
+          bg = 'NONE',
+        })
+      end
     end)
   end,
 }

@@ -4,7 +4,6 @@ return {
   opts = {
     extra_groups = {
       'NormalFloat', -- plugins which have float panel such as Lazy, Mason, LspInfo
-      'NvimTreeNormal', -- NvimTree
     },
     exclude_groups = {
       'IndentBlanklineChar',
@@ -31,15 +30,9 @@ return {
     local toggle_transparency = function()
       transparent.toggle()
       local colors = require('colors')
-      colors.set_colors('lualine')
-      colors.set_colors('bufferline')
-      colors.set_colors('ibl')
-      colors.set_colors('treesitter-context')
+      colors.set_all_colors()
       require('utils').run_global_function('ibl_setup')
-      colors.set_colors('telescope')
       if vim.g.transparent_enabled then
-        colors.set_colors('lualine_transparent')
-        transparent.clear_prefix('lualine_x')
         transparent.clear_prefix('TabLineFill')
       end
     end

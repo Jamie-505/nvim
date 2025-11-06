@@ -34,12 +34,12 @@ return {
   --   },
   --   {
   --     '<leader>bH',
-  --     '<cmd>BufferLineGoToBuffer 1<CR>',
+  --     '<CMD>BufferLineGoToBuffer 1<CR>',
   --     desc = 'Buffer Go to most left buffer',
   --   },
   --   {
   --     '<leader>bL',
-  --     '<cmd>BufferLineGoToBuffer -1<CR>',
+  --     '<CMD>BufferLineGoToBuffer -1<CR>',
   --     desc = 'Buffer Go to most right buffer',
   --   },
   --   -- {"<tab>", function()
@@ -48,10 +48,10 @@ return {
   --   -- {"<S-tab>", function()
   --   --   require("bufferline").cycle(-1)
   --   -- end, desc = "Buffer Goto prev" },
-  --   { '<tab>', '<cmd>BufferLineCycleNext<CR>', desc = 'Buffer Goto next', noremap = true },
-  --   { '<S-tab>', '<cmd>BufferLineCyclePrev<CR>', desc = 'Buffer Goto prev' },
-  --   { '<leader>bp', '<cmd>BufferLinePick<CR>', desc = 'Buffer Pick' },
-  --   { '<leader>bP', '<cmd>BufferLineTogglePin<CR>', desc = 'Buffer Toggle Pin' },
+  --   { '<tab>', '<CMD>BufferLineCycleNext<CR>', desc = 'Buffer Goto next', noremap = true },
+  --   { '<S-tab>', '<CMD>BufferLineCyclePrev<CR>', desc = 'Buffer Goto prev' },
+  --   { '<leader>bp', '<CMD>BufferLinePick<CR>', desc = 'Buffer Pick' },
+  --   { '<leader>bP', '<CMD>BufferLineTogglePin<CR>', desc = 'Buffer Toggle Pin' },
   --   {
   --     '<leader>tb',
   --     function()

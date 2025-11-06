@@ -12,7 +12,7 @@ return {
     'v',
     'g',
     '\\',
-    { '<leader>wka', '<cmd>WhichKey<CR>', desc = 'Whichkey Keymaps (all)' },
+    { '<leader>wka', '<CMD>WhichKey<CR>', desc = 'Whichkey Keymaps (all)' },
     {
       '<leader>wkc',
       function()

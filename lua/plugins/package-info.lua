@@ -5,7 +5,7 @@ return {
   keys = {
     {
       '<leader>pi',
-      '<cmd>Telescope package_info<CR>',
+      '<CMD>Telescope package_info<CR>',
       desc = 'Telescope NPM Package Info',
       silent = true,
       noremap = true,

@@ -157,19 +157,17 @@ return {
     }
     require('lualine').setup(opts)
     local colors = require('colors')
-    colors.add_color_module('lualine_transparent', function()
-      vim.api.nvim_set_hl(0, 'lualine_c_normal', {
-        bg = 'NONE',
-      })
-      vim.api.nvim_set_hl(0, 'lualine_c_transparent', {
-        bg = 'NONE',
-      })
-    end)
-    if vim.g.transparent_enabled then
-      colors.set_colors('lualine_transparent')
-      require('transparent').clear_prefix('lualine_x')
-    end
     colors.add_and_set_color_module('lualine', function()
+      if vim.g.transparent_enabled then
+        vim.api.nvim_set_hl(0, 'lualine_c_normal', {
+          bg = 'NONE',
+        })
+        vim.api.nvim_set_hl(0, 'lualine_c_transparent', {
+          bg = 'NONE',
+        })
+        colors.set_colors('lualine_transparent')
+        require('transparent').clear_prefix('lualine_x')
+      end
       vim.api.nvim_set_hl(0, 'lualine_c_diff_added_normal', {
         fg = '#a6e3a1',
       })

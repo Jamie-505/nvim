@@ -2,8 +2,8 @@ return {
   {
     'mfussenegger/nvim-dap',
     keys = {
-      { '<leader>D', '<cmd>DapNew<CR>', desc = 'Debug New' },
-      { '<leader>dba', '<cmd>DapClearBreakpoints<CR>', desc = 'Debug Clear Breakpoints' },
+      { '<leader>D', '<CMD>DapNew<CR>', desc = 'Debug New' },
+      { '<leader>dba', '<CMD>DapClearBreakpoints<CR>', desc = 'Debug Clear Breakpoints' },
       {
         '<leader>dbc',
         function()
@@ -13,8 +13,8 @@ return {
       },
       {
         '<leader>dbt',
-        '<cmd>DapToggleBreakpoint<cr>',
-        desc = 'Debug Breakpoint with condition',
+        '<CMD>DapToggleBreakpoint<CR>',
+        desc = 'Toggle Debug Breakpoint',
       },
       {
         '<leader>de',
@@ -23,7 +23,7 @@ return {
         end,
         desc = 'Debug Set exception breakpoints',
       },
-      { '<leader>dc', '<cmd>DapContinue<CR>', desc = 'Debug Continue' },
+      { '<leader>dc', '<CMD>DapContinue<CR>', desc = 'Debug Continue' },
       {
         '<leader>dp',
         function()
@@ -52,9 +52,9 @@ return {
         end,
         desc = 'Debug Down',
       },
-      { '<leader>dso', '<cmd>DapStepOver<CR>', desc = 'Debug Step Over' },
-      { '<leader>dsO', '<cmd>DapStepOut<CR>', desc = 'Debug Step Out' },
-      { '<leader>dsi', '<cmd>DapStepIn<CR>', desc = 'Debug Step In' },
+      { '<leader>dso', '<CMD>DapStepOver<CR>', desc = 'Debug Step Over' },
+      { '<leader>dsO', '<CMD>DapStepOut<CR>', desc = 'Debug Step Out' },
+      { '<leader>dsi', '<CMD>DapStepIn<CR>', desc = 'Debug Step In' },
       {
         '<leader>dh',
         function()
@@ -62,9 +62,9 @@ return {
         end,
         desc = 'Debug Widgets hover',
       },
-      { '<leader>dr', '<cmd>DapToggleRepl<CR>', desc = 'Debug Toggle Repl' },
-      { '<leader>dd', '<cmd>DapDisconnect<CR>', desc = 'Debug Disconnect' },
-      { '<leader>dt', '<cmd>DapTerminate<CR>', desc = 'Debug Terminate' },
+      { '<leader>dr', '<CMD>DapToggleRepl<CR>', desc = 'Debug Toggle Repl' },
+      { '<leader>dd', '<CMD>DapDisconnect<CR>', desc = 'Debug Disconnect' },
+      { '<leader>dt', '<CMD>DapTerminate<CR>', desc = 'Debug Terminate' },
       {
         '<leader>dus',
         function()
@@ -102,6 +102,7 @@ return {
             detached = false,
           },
         }
+        require('dap').defaults.flutter.exception_breakpoints = {}
       end
 
       local javascriptAdapter = function()
@@ -429,7 +430,7 @@ return {
     keys = {
       {
         '<leader>dv',
-        '<cmd>DapViewToggle<CR>',
+        '<CMD>DapViewToggle<CR>',
         desc = 'Debug Toggle UI',
       },
     },
