@@ -1,5 +1,6 @@
 -- quick navigation
 return {
+  enabled = false,
   'folke/flash.nvim',
   event = 'BufReadPost',
   ---@type Flash.Config

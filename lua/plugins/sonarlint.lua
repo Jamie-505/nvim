@@ -1,4 +1,5 @@
 return {
+  enabled = false,
   name = 'sonarlint',
   url = 'https://gitlab.com/schrieveslaach/sonarlint.nvim',
   ft = {
