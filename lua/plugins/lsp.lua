@@ -21,9 +21,8 @@ return {
     },
     event = { 'User NvimTreeSetup' },
     ft = { 'oil' },
-    config = function()
-      require('lsp-file-operations').setup()
-    end,
+    opts = {},
+    name = 'lsp-file-operations',
   },
   {
     'nvim-treesitter/nvim-treesitter',
