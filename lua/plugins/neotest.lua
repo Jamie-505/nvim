@@ -6,7 +6,7 @@ return {
     'antoinemadec/FixCursorHold.nvim',
     'nvim-treesitter/nvim-treesitter',
     -- Language specifics
-    'sidlatau/neotest-dart',
+    'NorinB/neotest-dart',
     'nvim-neotest/neotest-jest',
     'weilbith/neotest-gradle',
   },
@@ -82,6 +82,8 @@ return {
           use_lsp = true,
           -- Useful when using custom test names with @isTest annotation
           custom_test_method_names = { 'blocTest' },
+          -- don't fetch packages
+          additional_args = { "--no-pub" },
         }),
         require('neotest-gradle'),
         require('neotest-jest')({

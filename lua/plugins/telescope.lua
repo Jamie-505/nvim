@@ -58,7 +58,21 @@ return {
         desc = 'Diagnostics Diagnostics Current Buf',
       },
       -- Other
-      { '<leader>fb', '<CMD>Telescope buffers<CR>', desc = 'Telescope Buffers' },
+      {
+        '<leader>fb',
+        function()
+          require('telescope.builtin').buffers({
+            attach_mappings = function(_, map)
+              map('n', 'x', function(_prompt_bufnr)
+                require('telescope.actions').delete_buffer(_prompt_bufnr)
+              end, { desc = 'Telescope Delete Buffer' })
+
+              return true
+            end,
+          })
+        end,
+        desc = 'Telescope Buffers',
+      },
       { '<leader>fhe', '<CMD>Telescope help_tags<CR>', desc = 'Telescope Help page' },
       {
         '<leader>fo',
@@ -68,8 +82,22 @@ return {
         desc = 'Telescope Oldfiles in cwd',
       },
       { '<leader>fz', '<CMD>Telescope current_buffer_fuzzy_find<CR>', desc = 'Telescope Current Buffer' },
+      {
+        '<leader>fgb',
+        function()
+          require('telescope.builtin').git_branches({
+            attach_mappings = function(_, map)
+              local actions = require('telescope.actions')
+              map({ 'i', 'n' }, '<cr>', actions.git_switch_branch)
+              map({ 'i', 'n' }, '<c-o>', actions.git_checkout)
+              return true
+            end,
+          })
+        end,
+        desc = 'Telescope Git branches',
+      },
       { '<leader>fgc', '<CMD>Telescope git_commits<CR>', desc = 'Telescope Git commits' },
-      { '<leader>fgt', '<CMD>Telescope git_status<CR>', desc = 'Telescope Git status' },
+      { '<leader>fgs', '<CMD>Telescope git_status<CR>', desc = 'Telescope Git status' },
       { '<leader>fgh', '<CMD>Telescope git_file_history<CR>', desc = 'Telescope Git file history' },
       { '<leader>fte', '<CMD>Telescope terms<CR>', desc = 'Telescope Terminals' },
       {
@@ -93,7 +121,7 @@ return {
       { '<leader>fr', '<CMD>Telescope resume<CR>', desc = 'Telescope Resume last search' },
       { '<leader>fk', '<CMD>Telescope keymaps<CR>', desc = 'Telescope Keybindings' },
       { '<leader>fma', '<CMD>Telescope marks<CR>', desc = 'Telescope Marks' },
-      { '<leader>fgs', '<CMD>Telescope grep_string<CR>', mode = { 'n', 'v' }, desc = 'Telescope Grep String' },
+      { '<leader>fst', '<CMD>Telescope grep_string<CR>', mode = { 'n', 'v' }, desc = 'Telescope Grep String' },
       { '<leader>fsp', '<CMD>Telescope spell_suggest<CR>', desc = 'Telescope Spell suggest' },
       { '<leader>fp', '<CMD>Telescope pickers<CR>', desc = 'Telescope Pickers' },
       {
@@ -116,24 +144,24 @@ return {
       { '<leader>fhi', '<CMD>Telescope highlights<CR>', desc = 'Telescope Highlights' },
     },
     opts = function()
-      local function flash(prompt_bufnr)
-        require('flash').jump({
-          pattern = '^',
-          label = { after = { 0, 0 } },
-          search = {
-            mode = 'search',
-            exclude = {
-              function(win)
-                return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= 'TelescopeResults'
-              end,
-            },
-          },
-          action = function(match)
-            local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
-            picker:set_selection(match.pos[1] - 1)
-          end,
-        })
-      end
+      -- local function flash(prompt_bufnr)
+      --   require('flash').jump({
+      --     pattern = '^',
+      --     label = { after = { 0, 0 } },
+      --     search = {
+      --       mode = 'search',
+      --       exclude = {
+      --         function(win)
+      --           return vim.bo[vim.api.nvim_win_get_buf(win)].filetype ~= 'TelescopeResults'
+      --         end,
+      --       },
+      --     },
+      --     action = function(match)
+      --       local picker = require('telescope.actions.state').get_current_picker(prompt_bufnr)
+      --       picker:set_selection(match.pos[1] - 1)
+      --     end,
+      --   })
+      -- end
 
       return {
         pickers = {
@@ -199,11 +227,11 @@ return {
               ['<C-Up>'] = require('telescope.actions').preview_scrolling_up,
               ['<C-Left>'] = require('telescope.actions').preview_scrolling_left,
               ['<C-Right>'] = require('telescope.actions').preview_scrolling_right,
-              ['<C-f>'] = flash,
+              -- ['<C-f>'] = flash,
             },
             n = {
               ['q'] = require('telescope.actions').close,
-              m = flash,
+              -- m = flash,
               ['<C-Down>'] = require('telescope.actions').preview_scrolling_down,
               ['<C-Up>'] = require('telescope.actions').preview_scrolling_up,
               ['<C-Left>'] = require('telescope.actions').preview_scrolling_left,
