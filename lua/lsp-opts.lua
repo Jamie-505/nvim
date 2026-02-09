@@ -3,10 +3,6 @@ local map = vim.keymap.set
 local spinner = require('spinner')
 local utils = require('utils')
 
-local should_show_spinner = function()
-  return string.match(vim.fn.expand('%:p'), 'projects') ~= nil
-end
-
 local function apply_rename(currName, win)
   local newName = vim.trim(vim.fn.getline('.'))
   vim.api.nvim_win_close(win, true)
@@ -15,7 +11,7 @@ local function apply_rename(currName, win)
     local params = vim.lsp.util.make_position_params(0, 'utf-8')
     params = vim.tbl_extend('force', params, { newName = newName })
 
-    if should_show_spinner() then
+    if spinner.should_show_spinner() then
       local stripped_current_name = string.sub(currName, 1, #currName - 1)
       spinner.show('Renaming ' .. "'" .. stripped_current_name .. "'" .. ' to ' .. "'" .. newName .. "'", 'LSP')
     end
@@ -109,10 +105,9 @@ end
 
 local function send_lsp_notification(message)
   -- only send notifications, if the folder path includes "projects"
-  if should_show_spinner() then
+  if spinner.should_show_spinner() then
     local current_word = vim.call('expand', '<cword>')
     spinner.show(message .. current_word, 'LSP')
-    -- Snacks.notify(message .. current_word, { title = "LSP" })
   end
 end
 
