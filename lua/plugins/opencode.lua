@@ -137,7 +137,7 @@ return {
           wezterm = {
             direction = 'right',
             top_level = false,
-            percent = 50,
+            percent = 33,
           },
         },
       }
