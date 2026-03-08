@@ -304,9 +304,6 @@ return {
   {
     'mason-org/mason.nvim',
     cmd = { 'Mason', 'MasonInstall', 'MasonInstallAll', 'MasonUpdate' },
-    keys = {
-      { 'M', '<CMD>Mason<CR>', desc = 'Mason Open' },
-    },
     opts = function()
       return require('mason-opts')
     end,
