@@ -131,14 +131,79 @@ return {
       },
     },
     config = function()
+      local pane_id
+
+      local function get_pane_id()
+        if not pane_id then
+          return nil
+        end
+
+        local result = vim.fn.system('wezterm cli list --format json 2>&1')
+        if result == nil or result == '' or result:match('error') then
+          pane_id = nil
+          return nil
+        end
+
+        local ok, panes = pcall(vim.json.decode, result)
+        if not ok or type(panes) ~= 'table' then
+          pane_id = nil
+          return nil
+        end
+
+        for _, pane in ipairs(panes) do
+          if tostring(pane.pane_id) == tostring(pane_id) then
+            return pane_id
+          end
+        end
+
+        pane_id = nil
+        return nil
+      end
+
+      local function start_server()
+        if get_pane_id() then
+          return
+        end
+
+        local cmd = {
+          'wezterm',
+          'cli',
+          'split-pane',
+          '--left',
+          '--percent',
+          '25',
+          '--',
+          'opencode',
+        }
+
+        local result = vim.fn.system(table.concat(cmd, ' '))
+        vim.fn.system('wezterm cli activate-pane --pane-id ' .. vim.env.WEZTERM_PANE)
+        pane_id = result:match('^%d+')
+      end
+
+      local function stop_server()
+        local id = get_pane_id()
+        if not id then
+          return
+        end
+
+        vim.fn.system('wezterm cli kill-pane --pane-id ' .. id)
+        pane_id = nil
+      end
+
+      local function toggle_server()
+        if get_pane_id() then
+          stop_server()
+        else
+          start_server()
+        end
+      end
+
       vim.g.opencode_opts = {
-        provider = {
-          enabled = 'wezterm',
-          wezterm = {
-            direction = 'right',
-            top_level = false,
-            percent = 33,
-          },
+        server = {
+          start = start_server,
+          stop = stop_server,
+          toggle = toggle_server,
         },
       }
       vim.o.autoread = true

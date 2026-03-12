@@ -153,7 +153,7 @@ local options = {
   },
   toggle = {},
   input = {
-    enabled = false,
+    enabled = true,
   },
   words = {
     debounce = 100, -- time in ms to wait before updating

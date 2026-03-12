@@ -13,6 +13,7 @@ return {
     { '<leader>Oa', '<CMD>Octo actions<CR>', desc = 'Octo Actions' },
     { '<leader>Opl', '<CMD>Octo pr list<CR>', desc = 'Octo PR list' },
     { '<leader>Opc', '<CMD>Octo pr checkout<CR>', desc = 'Octo PR checkout' },
+    { '<leader>OpC', '<CMD>Octo pr create<CR>', desc = 'Octo PR checkout' },
     { '<leader>Opo', '<CMD>Octo pr browse<CR>', desc = 'Octo PR open for current branch' },
     { '<leader>OpO', '<CMD>Octo pr browser<CR>', desc = 'Octo PR open for current branch in browser' },
     { '<leader>Ors', '<CMD>Octo review start<CR>', desc = 'Octo Review start' },
