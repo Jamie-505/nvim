@@ -1,5 +1,15 @@
 return {
   'aznhe21/actions-preview.nvim',
+  keys = {
+    {
+      '<leader>lpa',
+      function()
+        require('actions-preview').code_actions()
+      end,
+      mode = { 'n', 'v' },
+      desc = 'Code action preview',
+    },
+  },
   opts = {
     -- options for vim.diff(): https://neovim.io/doc/user/lua.html#vim.diff()
     diff = {
