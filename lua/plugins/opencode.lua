@@ -173,7 +173,7 @@ return {
           '--percent',
           '25',
           '--',
-          'opencode',
+          'opencode --port',
         }
 
         local result = vim.fn.system(table.concat(cmd, ' '))
