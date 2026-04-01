@@ -1,11 +1,12 @@
 -- github PR tool
 return {
   'pwntester/octo.nvim',
+  commit = 'c14f5b6ee92f0b2717efd525211bcb6cebf03fa6',
   requires = {
     'nvim-lua/plenary.nvim',
-    'nvim-telescope/telescope.nvim',
+    -- 'nvim-telescope/telescope.nvim',
     -- OR 'ibhagwan/fzf-lua',
-    -- OR 'folke/snacks.nvim',
+    'folke/snacks.nvim',
     'nvim-tree/nvim-web-devicons',
   },
   cmd = { 'Octo' },
