@@ -46,6 +46,37 @@ return {
       end
       return ''
     end
+    -- Async reftable branch resolver: avoids synchronous shell calls in the
+    -- lualine fmt callback which would block the event loop every refresh.
+    local resolved_branch = nil
+    local function resolve_reftable_branch()
+      vim.system({ 'git', 'symbolic-ref', '--short', 'HEAD' }, { text = true }, function(out)
+        if out.code == 0 and out.stdout and out.stdout ~= '' then
+          local branch = out.stdout:gsub('\n', '')
+          vim.schedule(function()
+            resolved_branch = branch
+          end)
+        else
+          -- detached HEAD fallback
+          vim.system({ 'git', 'rev-parse', '--short', 'HEAD' }, { text = true }, function(fallback)
+            if fallback.code == 0 and fallback.stdout and fallback.stdout ~= '' then
+              local branch = fallback.stdout:gsub('\n', '')
+              vim.schedule(function()
+                resolved_branch = branch
+              end)
+            end
+          end)
+        end
+      end)
+    end
+    local reftable_augroup = vim.api.nvim_create_augroup('LualineReftableBranch', { clear = true })
+    vim.api.nvim_create_autocmd({ 'BufEnter', 'FocusGained', 'DirChanged' }, {
+      group = reftable_augroup,
+      callback = function()
+        resolve_reftable_branch()
+      end,
+    })
+    resolve_reftable_branch() -- eager: seed value on startup
     local function recording()
       local ok, noice = pcall(require, 'noice')
       if ok then
@@ -88,7 +119,18 @@ return {
           },
         },
       },
-      lualine_c = { 'branch', 'diff' },
+      lualine_c = {
+        {
+          'branch',
+          fmt = function(name)
+            if name == '.invalid' and resolved_branch then
+              return resolved_branch
+            end
+            return name
+          end,
+        },
+        'diff',
+      },
       lualine_x = {
         'searchcount',
         'selectioncount',
