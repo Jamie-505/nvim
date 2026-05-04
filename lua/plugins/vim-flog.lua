@@ -19,6 +19,7 @@ return {
           end,
           desc = 'Git fetch',
         },
+        { '<leader>GG', '<CMD>Git<CR>', desc = 'Git status (fugitive)' },
       },
     },
   },
