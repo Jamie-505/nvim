@@ -14,6 +14,10 @@ return {
       },
     },
   },
+  keys = {
+    { '<leader>ms', '<cmd>Markview splitToggle<CR>', desc = 'Toggle Markview split view' },
+    { '<leader>mt', '<cmd>Markview Toggle<CR>', desc = 'Toggle Markview preview' },
+  },
   config = function(_, opts)
     require('markview').setup(opts)
     require('markview.extras.checkboxes').setup({
