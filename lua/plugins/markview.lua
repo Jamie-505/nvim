@@ -15,7 +15,8 @@ return {
     },
   },
   keys = {
-    { '<leader>mc', '<cmd>Checkbox toggle<CR>', desc = 'Toggle checkboxes in markview' },
+    { '<leader>mci', '<cmd>Checkbox interactive<CR>', desc = 'Interactively change checkboxes in markview' },
+    { '<leader>mct', '<cmd>Checkbox toggle<CR>', desc = 'Toggle checkboxes in markview' },
     { '<leader>ms', '<cmd>Markview splitToggle<CR>', desc = 'Toggle Markview split view' },
     { '<leader>mt', '<cmd>Markview Toggle<CR>', desc = 'Toggle Markview preview' },
   },
