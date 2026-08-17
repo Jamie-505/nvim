@@ -5,6 +5,9 @@ local filetype_map = {
   dart = { 'dart_format' },
   html = { 'prettier' },
   htmlangular = { 'prettier' },
+  -- no external formatter, but the entry is what makes conform load for java
+  -- buffers so `format_after_save` can fall back to jdtls
+  java = {},
   javascript = { 'prettier' },
   json = {},
   lua = { 'stylua' },
