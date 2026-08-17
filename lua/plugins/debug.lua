@@ -151,6 +151,19 @@ return {
       end
 
       -- Configurations
+      -- jdtls.setup_dap() registers the `java` adapter and appends launch configs
+      -- for discovered main classes, so append here rather than assigning.
+      local javaConfigurations = function()
+        dap.configurations.java = dap.configurations.java or {}
+        table.insert(dap.configurations.java, {
+          type = 'java',
+          request = 'attach',
+          name = 'Attach to remote JVM (5005)',
+          hostName = '127.0.0.1',
+          port = 5005,
+        })
+      end
+
       local javascriptConfigurations = function()
         dap.configurations.javascript = {
           {
@@ -319,6 +332,7 @@ return {
       end
 
       M.setup_configurations = function()
+        javaConfigurations()
         javascriptConfigurations()
         typescriptConfigurations()
         -- VSCode configurations
