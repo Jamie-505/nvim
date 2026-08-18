@@ -214,6 +214,23 @@ return {
         cmd = cmd,
         root_dir = root_dir,
         settings = opts.settings,
+        handlers = {
+          -- jdtls serves requests off a resolved compilation unit and answers
+          -- null until the project is loaded. record readiness so hover can wait
+          -- for it. the echo mirrors nvim-jdtls' own status handler, which this
+          -- one replaces.
+          ['language/status'] = function(_, result)
+            if not result then
+              return
+            end
+            if result.type == 'ServiceReady' then
+              lspconfig.jdtls_ready[root_dir or ''] = true
+            end
+            if result.message then
+              vim.api.nvim_echo({ { result.message:sub(1, vim.v.echospace), 'Function' } }, false, {})
+            end
+          end,
+        },
         capabilities = lspconfig.capabilities,
         on_init = lspconfig.on_init,
         init_options = {
