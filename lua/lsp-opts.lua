@@ -62,9 +62,50 @@ end
 
 -- basic lsp config
 vim.api.nvim_create_autocmd({ 'LspAttach' }, {
-  callback = function()
+  callback = function(args)
     -- inlay hints
-    vim.lsp.inlay_hint.enable(true)
+    vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+  end,
+})
+
+-- hints go stale exactly while you are typing, which is the window where the
+-- decoration provider draws them past the end of a line
+vim.api.nvim_create_autocmd('InsertEnter', {
+  callback = function(args)
+    if vim.lsp.inlay_hint.is_enabled({ bufnr = args.buf }) then
+      vim.b[args.buf].inlay_hint_restore = true
+      vim.lsp.inlay_hint.enable(false, { bufnr = args.buf })
+    end
+  end,
+})
+vim.api.nvim_create_autocmd('InsertLeave', {
+  callback = function(args)
+    if vim.b[args.buf].inlay_hint_restore then
+      vim.b[args.buf].inlay_hint_restore = nil
+      vim.lsp.inlay_hint.enable(true, { bufnr = args.buf })
+    end
+  end,
+})
+
+-- jdtls answers requests with null until it finished loading the project, so a
+-- hover fired right after startup looks like "No information available".
+-- `language/status` tells us when it is actually usable, keyed by root_dir.
+M.jdtls_ready = {}
+
+-- LspDetach also fires when a single buffer detaches, so confirm the client is
+-- really gone (:JdtRestart, crash) before dropping its readiness
+vim.api.nvim_create_autocmd('LspDetach', {
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if not client or client.name ~= 'jdtls' then
+      return
+    end
+    local root_dir = client.root_dir or ''
+    vim.schedule(function()
+      if not vim.lsp.get_client_by_id(args.data.client_id) then
+        M.jdtls_ready[root_dir] = nil
+      end
+    end)
   end,
 })
 
@@ -184,11 +225,94 @@ M.setup_keymaps = function()
       },
     })
   end, opts('Lsp Go to definition'))
-  map('n', '<leader>lh', function()
-    vim.lsp.buf.hover({
-      border = 'rounded',
-    })
-  end, opts('Lsp hover information'))
+  -- vim.lsp.buf.hover waits for every attached client and renders whatever came
+  -- back. on java both jdtls and the spring boot server answer, the latter
+  -- always with an empty `contents`, so a jdtls that is still resolving the
+  -- compilation unit shows up as "Empty hover response". ask the useful client
+  -- alone and give it a couple of chances to warm up.
+  local hover_client = { java = 'jdtls' }
+
+  local function hover_has_content(result)
+    local contents = result and result.contents
+    if not contents then
+      return false
+    end
+    if type(contents) == 'string' then
+      return #contents > 0
+    end
+    return not vim.tbl_isempty(contents)
+  end
+
+  -- jdtls answers punctuation with an empty payload, so hovering the `@` of an
+  -- annotation reports nothing. shift onto the identifier it belongs to.
+  local function hover_position_params(client)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local line = vim.api.nvim_get_current_line()
+    local col = cursor[2]
+    if not line:sub(col + 1, col + 1):match('[%w_]') and line:sub(col + 2, col + 2):match('[%w_]') then
+      col = col + 1
+    end
+    return {
+      textDocument = vim.lsp.util.make_text_document_params(0),
+      position = {
+        line = cursor[1] - 1,
+        character = vim.str_utfindex(line, client.offset_encoding, col, false),
+      },
+    }
+  end
+
+  local function hover_request(client, retries)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local params = hover_position_params(client)
+    client:request('textDocument/hover', params, function(err, result, ctx)
+      if not err and not hover_has_content(result) and retries > 0 and vim.api.nvim_get_current_buf() == bufnr then
+        vim.defer_fn(function()
+          hover_request(client, retries - 1)
+        end, 300)
+        return
+      end
+      vim.lsp.handlers['textDocument/hover'](err, result, ctx, { border = 'rounded' })
+    end, bufnr)
+  end
+
+  local function hover()
+    local name = hover_client[vim.bo.filetype]
+    if not name then
+      vim.lsp.buf.hover({
+        border = 'rounded',
+      })
+      return
+    end
+
+    local bufnr = vim.api.nvim_get_current_buf()
+    local waited = 0
+    local function attempt()
+      if vim.api.nvim_get_current_buf() ~= bufnr then
+        return
+      end
+      local client = vim.lsp.get_clients({ bufnr = bufnr, name = name })[1]
+      local ready = client and M.jdtls_ready[client.root_dir or ''] or false
+      if client and (ready or waited >= 30000) then
+        hover_request(client, 2)
+        return
+      end
+      if waited >= 30000 then
+        vim.lsp.buf.hover({
+          border = 'rounded',
+        })
+        return
+      end
+      if waited == 0 then
+        vim.notify(name .. ' is still loading the project, hover pending', vim.log.levels.INFO)
+      end
+      waited = waited + 500
+      vim.defer_fn(attempt, 500)
+    end
+    attempt()
+  end
+
+  map('n', '<leader>lh', hover, opts('Lsp hover information'))
+  map('n', 'K', hover, opts('Lsp hover information'))
   map('n', '<leader>lgi', function()
     send_lsp_notification('Go to implementation: ')
     require('telescope.builtin').lsp_implementations({
@@ -266,8 +390,8 @@ M.setup_keymaps = function()
   end, opts('Lsp Codelens'))
 
   map('n', '<leader>li', function()
-    local enabled = vim.lsp.inlay_hint.is_enabled()
-    vim.lsp.inlay_hint.enable(not enabled)
+    local enabled = vim.lsp.inlay_hint.is_enabled({ bufnr = 0 })
+    vim.lsp.inlay_hint.enable(not enabled, { bufnr = 0 })
   end, opts('Lsp Toggle inlay hints'))
 
   map('n', '<leader>lls', function()

@@ -49,7 +49,15 @@ return {
     local launch = require('spring_boot.launch')
     local function start()
       -- rebuild per buffer, update_ls_config derives root_dir from the current one
-      launch.start(launch.update_ls_config(resolved))
+      local config = launch.update_ls_config(resolved)
+      -- jdtls owns java inlay hints. vim.lsp.inlay_hint keeps hints per client
+      -- but only one version stamp for the whole buffer, so the slower server's
+      -- positions end up drawn against a newer buffer and the decoration
+      -- provider dies with "Invalid 'col': out of range"
+      config.handlers = vim.tbl_extend('force', config.handlers or {}, {
+        ['textDocument/inlayHint'] = function() end,
+      })
+      launch.start(config)
     end
 
     vim.api.nvim_create_autocmd('FileType', {
