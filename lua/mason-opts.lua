@@ -27,14 +27,10 @@ M.filetype_lsp_map = function()
     jsonls = 'json',
     pyright = 'python',
     qmlls = 'qml',
-    rust_analyzer = 'rust',
     terraformls = 'tf',
     ts_ls = 'typescript',
     yamlls = 'yaml',
   }
-  if vim.fn.executable('go') == 1 then
-    filetype_table.hyprls = 'hyprlang'
-  end
   return filetype_table
 end
 
@@ -125,13 +121,13 @@ M.get_all_ensure_installed_mason_names = function()
     'dockerfile-language-server',
     'emmet-language-server',
     'eslint-lsp',
+    'html-lsp',
     'java-debug-adapter',
     'java-test',
     'jdtls',
     'js-debug-adapter',
     'json-lsp',
-    -- "latexindent",
-    -- "ltex-ls",
+    'kotlin-language-server',
     'lua-language-server',
     'luacheck',
     'markdownlint',
@@ -139,13 +135,10 @@ M.get_all_ensure_installed_mason_names = function()
     'prettier',
     'pyright',
     'qmlls',
-    'roslyn',
-    'rust-analyzer',
     'shellcheck',
     'shfmt',
     'sonarlint-language-server',
     'stylua',
-    -- "texlab",
     'terraform-ls',
     'trivy',
     'typescript-language-server',
@@ -153,9 +146,6 @@ M.get_all_ensure_installed_mason_names = function()
     'yaml-language-server',
     'yamlfmt',
   }
-  if vim.fn.executable('go') == 1 then
-    table.insert(name_table, 'hyprls')
-  end
   return name_table
 end
 

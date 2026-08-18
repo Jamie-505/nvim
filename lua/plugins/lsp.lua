@@ -49,7 +49,6 @@ return {
         'hcl',
         'html',
         'html_tags',
-        'hyprlang',
         'ini',
         'java',
         'javascript',
@@ -68,7 +67,6 @@ return {
         'python',
         'regex',
         'ruby',
-        'rust',
         'ssh_config',
         'swift',
         'terraform',
@@ -92,10 +90,6 @@ return {
       require('nvim-treesitter').update()
 
       -- Add Custom Filetypes
-      local function is_hypr_conf(path)
-        return path:match('/hypr/') and path:match('%.conf$')
-      end
-
       local function is_tmux_conf(path)
         return path:match('%tmux.conf$')
       end
@@ -117,13 +111,10 @@ return {
             return check_yaml_file(path)
           end,
           ['.*%.conf'] = function(path, _)
-            if is_hypr_conf(path) then
-              return 'hyprlang'
-            elseif is_tmux_conf(path) then
+            if is_tmux_conf(path) then
               return 'tmux'
-            else
-              return 'dosini'
             end
+            return 'dosini'
           end,
         },
       })

@@ -97,7 +97,24 @@ local make_capabilities = function()
 end
 
 M.capabilities = make_capabilities()
+-- servers whose semantic tokens resolve things treesitter cannot (globals vs
+-- locals, field vs local, class vs interface, hcl reference targets)
+local semantic_tokens_ok = {
+  dockerls = true,
+  jdtls = true,
+  kotlin_language_server = true,
+  lua_ls = true,
+  -- no qmljs treesitter parser installed, so these tokens are the only
+  -- structured highlighting qml gets
+  qmlls = true,
+  terraformls = true,
+  ts_ls = true,
+}
+
 M.on_init = function(client, _)
+  if semantic_tokens_ok[client.name] then
+    return
+  end
   if client:supports_method('textDocument/semanticTokens') then
     client.server_capabilities.semanticTokensProvider = nil
   end
@@ -294,10 +311,6 @@ M.defaults = function()
     'qmlls',
     'terraformls',
   }
-
-  if vim.fn.executable('hyprls') == 1 then
-    table.insert(lsp_servers, 'hyprls')
-  end
 
   -- LSPs with default config
   for _, lsp in ipairs(lsp_servers) do
