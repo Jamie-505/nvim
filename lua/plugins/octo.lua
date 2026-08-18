@@ -24,6 +24,7 @@ return {
     { '<leader>Orc', '<CMD>Octo review commit<CR>', desc = 'Octo Review commit' },
     { '<leader>Ord', '<CMD>Octo review discard<CR>', desc = 'Octo Review discard' },
   },
+  ---@type OctoConfig
   opts = {
     mappings_disable_default = false,
     mappings = {

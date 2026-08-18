@@ -438,14 +438,9 @@ M.defaults = function()
         diagnostics = {
           globals = { 'vim' },
         },
+        -- workspace.library is managed by lazydev.nvim
         workspace = {
-          library = {
-            [vim.fn.expand('$VIMRUNTIME/lua')] = true,
-            [vim.fn.expand('$VIMRUNTIME/lua/vim/lsp')] = true,
-            [vim.fn.stdpath('data') .. '/lazy/lazy.nvim/lua/lazy'] = true,
-            -- [vim.fn.stdpath "data"] = true,
-            [vim.fn.expand('~/.config/nvim')] = true,
-          },
+          checkThirdParty = false,
           maxPreload = 100000,
           preloadFileSize = 10000,
         },

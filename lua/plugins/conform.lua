@@ -67,6 +67,7 @@ return {
       desc = 'General Format enable on save',
     })
 
+    ---@type conform.setupOpts
     return {
       formatters_by_ft = filetype_map,
       formatters = {

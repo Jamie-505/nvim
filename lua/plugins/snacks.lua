@@ -17,6 +17,7 @@ end
 
 local pause_notifications = false
 
+---@type snacks.Config
 local options = {
   bigfile = {
     enabled = true,

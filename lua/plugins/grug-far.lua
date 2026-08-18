@@ -15,6 +15,7 @@ return {
       desc = 'Search Selection',
     },
   },
+  ---@type grug.far.OptionsOverride
   opts = {
     keymaps = {
       close = { n = 'q' },

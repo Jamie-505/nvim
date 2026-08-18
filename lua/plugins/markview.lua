@@ -22,6 +22,7 @@ return {
   },
   config = function(_, opts)
     require('markview').setup(opts)
+    ---@type markview.extras.checkbox.config
     require('markview.extras.checkboxes').setup({
       --- Default checkbox state(used when adding checkboxes).
       ---@type string

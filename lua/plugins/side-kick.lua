@@ -116,6 +116,7 @@ return {
         desc = 'Sidekick toggle openCode',
       },
     },
+    ---@type sidekick.Config
     opts = {
       nes = { enabled = false },
       cli = {

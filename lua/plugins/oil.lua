@@ -18,6 +18,7 @@ return {
       desc = 'Oil Open parent directory',
     },
   },
+  ---@type oil.SetupOpts
   opts = {
     win_options = {
       wrap = true,
