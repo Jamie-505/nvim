@@ -21,7 +21,7 @@ map('n', '<C-S-Tab>', '<CMD>tabprevious<CR>', { desc = 'Tab Previous' })
 
 -- Highlights
 map('n', '<Esc>', '<CMD>noh<CR>', { desc = 'General Clear all highlights' })
-map('n', '<leader>a', 'ggVG<CR>', { desc = 'Highlight Highlight all' })
+map('n', '<leader>A', 'ggVG', { desc = 'Highlight all' })
 
 -- Diagnostics
 map('n', '<leader>ldf', vim.diagnostic.open_float, { desc = 'Diagnostics Floating diagnostics' })

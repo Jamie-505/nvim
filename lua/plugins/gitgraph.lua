@@ -11,6 +11,7 @@ return {
         desc = 'Git Graph',
       },
     },
+    ---@type I.GGConfig
     opts = {
       symbols = {
         merge_commit = 'M',

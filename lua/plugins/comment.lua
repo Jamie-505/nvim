@@ -15,5 +15,6 @@ return {
       mode = 'v',
     },
   },
+  ---@type CommentConfig
   opts = {},
 }

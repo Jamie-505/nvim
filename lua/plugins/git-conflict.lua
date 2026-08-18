@@ -10,6 +10,7 @@ return {
     { '<leader>cb', '<CMD>GitConflictChooseBoth<CR>', desc = 'Git Conflict Choose Both' },
     { '<leader>cl', '<CMD>GitConflictListQf<CR>', desc = 'Git Conflict List' },
   },
+  ---@type GitConflictUserConfig
   opts = {
     default_mappings = false, -- disable buffer local mapping created by this plugin
     default_commands = true, -- disable commands created by this plugin

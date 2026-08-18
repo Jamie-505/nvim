@@ -4,6 +4,7 @@ return {
   lazy = false,
   priority = 1000,
   config = function()
+    ---@type CatppuccinOptions
     require('catppuccin').setup({
       flavour = 'mocha',
       transparent_background = vim.g.transparent_enabled,

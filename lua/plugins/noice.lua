@@ -5,6 +5,7 @@ return {
     'MunifTanjim/nui.nvim',
     {
       'rcarriga/nvim-notify',
+      ---@type notify.Config
       opts = {
         fps = 60,
         background_colour = '#FDFD9A',
@@ -16,6 +17,7 @@ return {
     { '<leader>fn', '<CMD>Noice telescope<CR>', desc = 'Notifications Show history' },
     -- { "<leader>dm", "<CMD>Noice dismiss<CR>", desc = "Noice Dismiss messages" },
   },
+  ---@type NoiceConfig
   opts = {
     presets = {
       inc_rename = {

@@ -167,6 +167,7 @@ return {
     branch = 'main',
     event = { 'BufReadPost', 'BufNewFile' },
     config = function()
+      ---@type TSTextObjects.UserConfig
       require('nvim-treesitter-textobjects').setup({
         select = {
           enable = true,

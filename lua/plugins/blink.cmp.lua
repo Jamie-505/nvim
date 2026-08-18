@@ -43,7 +43,15 @@ return {
         preset = 'luasnip',
       },
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'buffer' },
+        default = { 'lazydev', 'lsp', 'path', 'snippets', 'buffer' },
+        providers = {
+          lazydev = {
+            name = 'LazyDev',
+            module = 'lazydev.integrations.blink',
+            -- rank above LSP so real module names win inside require()
+            score_offset = 100,
+          },
+        },
       },
     },
     opts_extend = { 'sources.default' },

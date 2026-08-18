@@ -12,6 +12,7 @@ return {
     },
   },
   config = function()
+    ---@type rainbow_delimiters.config
     require('rainbow-delimiters.setup').setup({
       strategy = {
         -- ...
