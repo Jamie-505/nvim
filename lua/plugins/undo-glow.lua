@@ -1,356 +1,216 @@
 return {
-  -- {
-  --   "aidancz/buvvers.nvim",
-  --   dependencies = {
-  --     "nvim-tree/nvim-web-devicons",
-  --   },
-  --   keys = {
-  --     {
-  --       "<leader>tb",
-  --       function()
-  --         require("buvvers").toggle()
-  --       end,
-  --       desc = "Toggle Vertical buffer list",
-  --     },
-  --   },
-  --   opts = {
-  --     buffer_handle_list_to_buffer_name_list = function(handle_l)
-  --       local name_l
-  --
-  --       local default_function = require "buvvers.buffer_handle_list_to_buffer_name_list"
-  --       name_l = default_function(handle_l)
-  --
-  --       for n, name in ipairs(name_l) do
-  --         -- modified prefix
-  --         local table_to_add = {}
-  --         local is_modified = vim.api.nvim_get_option_value("modified", { buf = handle_l[n] })
-  --         local prefix
-  --         if is_modified then
-  --           prefix = "  "
-  --         else
-  --           prefix = ""
-  --         end
-  --         table.insert(table_to_add, { prefix, "BuvversModifiedIcon" })
-  --         -- filetype icon
-  --         local ok, devicons = pcall(require, "nvim-web-devicons")
-  --         local icon = nil
-  --         local hl = nil
-  --         if ok then
-  --           local filetype = vim.filetype.match { filename = name }
-  --           local fetched_icon, fetched_hl = devicons.get_icon_by_filetype(filetype, { default = false })
-  --           icon = fetched_icon
-  --           hl = fetched_hl
-  --         end
-  --         if icon ~= nil then
-  --           local icon_table = { icon .. " " }
-  --           if hl ~= nil then
-  --             table.insert(icon_table, hl)
-  --           end
-  --           table.insert(table_to_add, icon_table)
-  --         end
-  --         -- filename
-  --         table.insert(table_to_add, name)
-  --
-  --         name_l[n] = table_to_add
-  --       end
-  --
-  --       return name_l
-  --     end,
-  --   },
-  --   config = function(_, opts)
-  --     vim.api.nvim_set_hl(0, "BuvversModifiedIcon", {
-  --       fg = "#50fed8",
-  --     })
-  --     require("buvvers").setup(opts)
-  --     local add_autocmds = function()
-  --       vim.api.nvim_create_autocmd({
-  --         "BufModifiedSet",
-  --       }, {
-  --         group = "buvvers",
-  --         callback = require("buvvers").buvvers_open,
-  --       })
-  --     end
-  --     vim.api.nvim_create_augroup("buvvers_config", { clear = true })
-  --     vim.api.nvim_create_autocmd("User", {
-  --       group = "buvvers_config",
-  --       pattern = "BuvversAutocmdEnabled",
-  --       callback = add_autocmds,
-  --     })
-  --   end,
-  -- },
-  -- {
-  --   "uga-rosa/ccc.nvim",
-  --   cmd = { "CccPick" },
-  --   keys = {
-  --     { "<leader>ccc", "<CMD>CccPick<CR>", desc = "Colors Change color under cursor" },
-  --   },
-  --   opts = {},
-  -- },
-  {
-    'akinsho/toggleterm.nvim',
-    version = '*',
-    keys = {
-      {
-        '<leader>Th',
-        '<CMD>ToggleTerm direction=horizontal<CR>',
-        desc = 'Terminal Toggle horizontal term',
+  'y3owk1n/undo-glow.nvim',
+  event = { 'VeryLazy' },
+  ---@type UndoGlow.Config
+  opts = {
+    animation = {
+      enabled = true,
+      duration = 300,
+      animation_type = 'zoom',
+      window_scoped = true,
+    },
+    highlights = {
+      undo = {
+        hl_color = { bg = '#693232' }, -- Dark muted red
       },
-      {
-        '<leader>Tv',
-        '<CMD>ToggleTerm direction=vertical size=60<CR>',
-        desc = 'Terminal Toggle vertical term',
+      redo = {
+        hl_color = { bg = '#2F4640' }, -- Dark muted green
       },
-      {
-        '<leader>Tf',
-        '<CMD>ToggleTerm direction=float<CR>',
-        desc = 'Terminal Toggle floating term',
+      yank = {
+        hl_color = { bg = '#7A683A' }, -- Dark muted yellow
+      },
+      paste = {
+        hl_color = { bg = '#325B5B' }, -- Dark muted cyan
+      },
+      search = {
+        hl_color = { bg = '#5C475C' }, -- Dark muted purple
+      },
+      comment = {
+        hl_color = { bg = '#7A5A3D' }, -- Dark muted orange
+      },
+      cursor = {
+        hl_color = { bg = '#793D54' }, -- Dark muted pink
       },
     },
-    opts = {},
+    priority = 2048 * 3,
   },
-  {
-    'mrjones2014/smart-splits.nvim',
-    lazy = false,
-    keys = {
-      {
-        '<C-h>',
-        function()
-          require('smart-splits').move_cursor_left()
-        end,
-        desc = 'SmartSplits move cursor left',
-        mode = { 'n', 't' },
-      },
-      {
-        '<C-j>',
-        function()
-          require('smart-splits').move_cursor_down()
-        end,
-        mode = { 'n', 't' },
-        desc = 'SmartSplits move cursor down',
-      },
-      {
-        '<C-k>',
-        function()
-          require('smart-splits').move_cursor_up()
-        end,
-        mode = { 'n', 't' },
-        desc = 'SmartSplits move cursor up',
-      },
-      {
-        '<C-l>',
-        function()
-          require('smart-splits').move_cursor_right()
-        end,
-        mode = { 'n', 't' },
-        desc = 'SmartSplits move cursor right',
-      },
-      {
-        '<Right>',
-        function()
-          require('smart-splits').resize_right()
-        end,
-        desc = 'Window Resize right',
-      },
-      {
-        '<Left>',
-        function()
-          require('smart-splits').resize_left()
-        end,
-        desc = 'Window Resize left',
-      },
-      {
-        '<Up>',
-        function()
-          require('smart-splits').resize_up()
-        end,
-        desc = 'Window Resize up',
-      },
-      {
-        '<Down>',
-        function()
-          require('smart-splits').resize_down()
-        end,
-        desc = 'Window Resize down',
-      },
-      {
-        '<M-Right>',
-        function()
-          require('smart-splits').swap_buf_right()
-        end,
-        desc = 'Window Resize right',
-      },
-      {
-        '<M-Left>',
-        function()
-          require('smart-splits').swap_buf_left()
-        end,
-        desc = 'Window Resize left',
-      },
-      {
-        '<M-Up>',
-        function()
-          require('smart-splits').swap_buf_up()
-        end,
-        desc = 'Window Resize up',
-      },
-      {
-        '<M-Down>',
-        function()
-          require('smart-splits').swap_buf_down()
-        end,
-        desc = 'Window Resize down',
-      },
-    },
-    opts = {
-      -- Ignored buffer types (only while resizing)
-      ignored_buftypes = {
-        'nofile',
-        'quickfix',
-        'prompt',
-      },
-      -- Ignored filetypes (only while resizing)
-      ignored_filetypes = { 'NvimTree' },
-      -- the default number of lines/columns to resize by at a time
-      default_amount = 3,
-      -- Desired behavior when your cursor is at an edge and you
-      -- are moving towards that same edge:
-      -- 'wrap' => Wrap to opposite side
-      -- 'split' => Create a new split in the desired direction
-      -- 'stop' => Do nothing
-      -- function => You handle the behavior yourself
-      -- NOTE: If using a function, the function will be called with
-      -- a context object with the following fields:
-      -- {
-      --    mux = {
-      --      type:'tmux'|'wezterm'|'kitty'
-      --      current_pane_id():number,
-      --      is_in_session(): boolean
-      --      current_pane_is_zoomed():boolean,
-      --      -- following methods return a boolean to indicate success or failure
-      --      current_pane_at_edge(direction:'left'|'right'|'up'|'down'):boolean
-      --      next_pane(direction:'left'|'right'|'up'|'down'):boolean
-      --      resize_pane(direction:'left'|'right'|'up'|'down'):boolean
-      --      split_pane(direction:'left'|'right'|'up'|'down',size:number|nil):boolean
-      --    },
-      --    direction = 'left'|'right'|'up'|'down',
-      --    split(), -- utility function to split current Neovim pane in the current direction
-      --    wrap(), -- utility function to wrap to opposite Neovim pane
-      -- }
-      -- NOTE: `at_edge = 'wrap'` is not supported on Kitty terminal
-      -- multiplexer, as there is no way to determine layout via the CLI
-      at_edge = 'wrap',
-      -- Desired behavior when the current window is floating:
-      -- 'previous' => Focus previous Vim window and perform action
-      -- 'mux' => Always forward action to multiplexer
-      float_win_behavior = 'previous',
-      -- when moving cursor between splits left or right,
-      -- place the cursor on the same row of the *screen*
-      -- regardless of line numbers. False by default.
-      -- Can be overridden via function parameter, see Usage.
-      move_cursor_same_row = false,
-      -- whether the cursor should follow the buffer when swapping
-      -- buffers by default; it can also be controlled by passing
-      -- `{ move_cursor = true }` or `{ move_cursor = false }`
-      -- when calling the Lua function.
-      cursor_follows_swapped_bufs = false,
-      -- resize mode options
-      resize_mode = {
-        -- key to exit persistent resize mode
-        quit_key = '<ESC>',
-        -- keys to use for moving in resize mode
-        -- in order of left, down, up' right
-        resize_keys = { '<left>', '<down>', '<up>', '<right>' },
-        -- set to true to silence the notifications
-        -- when entering/exiting persistent resize mode
-        silent = false,
-        -- must be functions, they will be executed when
-        -- entering or exiting the resize mode
-        hooks = {
-          on_enter = nil,
-          on_leave = nil,
-        },
-      },
-      -- ignore these autocmd events (via :h eventignore) while processing
-      -- smart-splits.nvim computations, which involve visiting different
-      -- buffers and windows. These events will be ignored during processing,
-      -- and un-ignored on completed. This only applies to resize events,
-      -- not cursor movement events.
-      ignored_events = {
-        'BufEnter',
-        'WinEnter',
-      },
-      -- enable or disable a multiplexer integration;
-      -- automatically determined, unless explicitly disabled or set,
-      -- by checking the $TERM_PROGRAM environment variable,
-      -- and the $KITTY_LISTEN_ON environment variable for Kitty
-      multiplexer_integration = nil,
-      -- disable multiplexer navigation if current multiplexer pane is zoomed
-      -- this functionality is only supported on tmux and Wezterm due to kitty
-      -- not having a way to check if a pane is zoomed
-      disable_multiplexer_nav_when_zoomed = true,
-      -- Supply a Kitty remote control password if needed,
-      -- or you can also set vim.g.smart_splits_kitty_password
-      -- see https://sw.kovidgoyal.net/kitty/conf/#opt-kitty.remote_control_password
-      kitty_password = nil,
-      -- default logging level, one of: 'trace'|'debug'|'info'|'warn'|'error'|'fatal'
-      log_level = 'info',
-    },
-  },
-  {
-    'b0o/incline.nvim',
-    event = { 'BufReadPost', 'BufEnter' },
-    opts = {
-      render = function(props)
-        local helpers = require('incline.helpers')
-        local devicons = require('nvim-web-devicons')
-        local filename = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(props.buf), ':t')
-        if filename == '' then
-          filename = '[No Name]'
-        end
-        local ft_icon, ft_color = devicons.get_icon_color(filename)
-        local modified = vim.bo[props.buf].modified
-        return {
-          ft_icon and { ' ', ft_icon, ' ', guibg = ft_color, guifg = helpers.contrast_color(ft_color) } or '',
-          ' ',
-          { filename, gui = modified and 'bold,italic' or 'bold' },
-          ' ',
-          guibg = '#44406e',
-        }
+  keys = {
+    {
+      'u',
+      function()
+        require('undo-glow').undo()
       end,
-      hide = {
-        cursorline = true,
-        focused_win = true,
-      },
-      window = {
-        margin = {
-          vertical = 2,
-        },
-      },
+      mode = 'n',
+      desc = 'Undo with highlight',
+      noremap = true,
+    },
+    {
+      'U',
+      function()
+        require('undo-glow').redo()
+      end,
+      mode = 'n',
+      desc = 'Redo with highlight',
+      noremap = true,
+    },
+    {
+      'p',
+      function()
+        require('undo-glow').paste_below()
+      end,
+      mode = 'n',
+      desc = 'Paste below with highlight',
+      noremap = true,
+    },
+    {
+      'P',
+      function()
+        require('undo-glow').paste_above()
+      end,
+      mode = 'n',
+      desc = 'Paste above with highlight',
+      noremap = true,
+    },
+    {
+      'n',
+      function()
+        require('undo-glow').search_next({
+          animation = {
+            animation_type = 'strobe',
+          },
+        })
+      end,
+      mode = 'n',
+      desc = 'Search next with highlight',
+      noremap = true,
+    },
+    {
+      'N',
+      function()
+        require('undo-glow').search_prev({
+          animation = {
+            animation_type = 'strobe',
+          },
+        })
+      end,
+      mode = 'n',
+      desc = 'Search prev with highlight',
+      noremap = true,
+    },
+    {
+      '*',
+      function()
+        require('undo-glow').search_star({
+          animation = {
+            animation_type = 'strobe',
+          },
+        })
+      end,
+      mode = 'n',
+      desc = 'Search star with highlight',
+      noremap = true,
+    },
+    {
+      '#',
+      function()
+        require('undo-glow').search_hash({
+          animation = {
+            animation_type = 'strobe',
+          },
+        })
+      end,
+      mode = 'n',
+      desc = 'Search hash with highlight',
+      noremap = true,
+    },
+    {
+      'gc',
+      function()
+        -- This is an implementation to preserve the cursor position
+        local pos = vim.fn.getpos('.')
+        vim.schedule(function()
+          vim.fn.setpos('.', pos)
+        end)
+        return require('undo-glow').comment()
+      end,
+      mode = { 'n', 'x' },
+      desc = 'Toggle comment with highlight',
+      expr = true,
+      noremap = true,
+    },
+    {
+      'gc',
+      function()
+        require('undo-glow').comment_textobject()
+      end,
+      mode = 'o',
+      desc = 'Comment textobject with highlight',
+      noremap = true,
+    },
+    {
+      'gcc',
+      function()
+        return require('undo-glow').comment_line()
+      end,
+      mode = 'n',
+      desc = 'Toggle comment line with highlight',
+      expr = true,
+      noremap = true,
     },
   },
-  {
-    'Bekaboo/dropbar.nvim',
-    event = { 'BufReadPost', 'BufNewFile' },
-    keys = {
-      {
-        '<leader>;',
-        function()
-          require('dropbar.api').pick()
-        end,
-        desc = 'Pick Symbol from top bar',
-      },
-      {
-        '<leader>td',
-        function()
-          if vim.o.winbar == '' then
-            vim.o.winbar = '%{%v:lua.dropbar()%}'
-          else
-            vim.o.winbar = ''
-          end
-        end,
-        desc = 'Toggle Dropbar (breadcrumbs)',
-      },
-    },
-    opts = {},
-  },
+  init = function()
+    vim.api.nvim_create_autocmd('TextYankPost', {
+      desc = 'Highlight when yanking (copying) text',
+      callback = function()
+        require('undo-glow').yank()
+      end,
+    })
+
+    -- This only handles neovim instance and do not highlight when switching panes in tmux
+    vim.api.nvim_create_autocmd('CursorMoved', {
+      desc = 'Highlight when cursor moved significantly',
+      callback = function()
+        require('undo-glow').cursor_moved({
+          animation = {
+            animation_type = 'slide',
+          },
+        })
+      end,
+    })
+
+    -- This will handle highlights when focus gained, including switching panes in tmux
+    vim.api.nvim_create_autocmd('FocusGained', {
+      desc = 'Highlight when focus gained',
+      callback = function()
+        ---@type UndoGlow.CommandOpts
+        local opts = {
+          animation = {
+            animation_type = 'slide',
+          },
+        }
+
+        opts = require('undo-glow.utils').merge_command_opts('UgCursor', opts)
+        local pos = require('undo-glow.utils').get_current_cursor_row()
+
+        require('undo-glow').highlight_region(vim.tbl_extend('force', opts, {
+          s_row = pos.s_row,
+          s_col = pos.s_col,
+          e_row = pos.e_row,
+          e_col = pos.e_col,
+          force_edge = opts.force_edge == nil and true or opts.force_edge,
+        }))
+      end,
+    })
+
+    vim.api.nvim_create_autocmd('CmdlineLeave', {
+      desc = 'Highlight when search cmdline leave',
+      callback = function()
+        require('undo-glow').search_cmd({
+          animation = {
+            animation_type = 'fade',
+          },
+        })
+      end,
+    })
+  end,
 }
