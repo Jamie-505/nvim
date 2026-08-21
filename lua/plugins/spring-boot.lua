@@ -2,7 +2,7 @@
 return {
   'JavaHello/spring-boot.nvim',
   dependencies = { 'mfussenegger/nvim-jdtls' },
-  ft = { 'java', 'yaml', 'jproperties' },
+  ft = { 'java', 'kotlin', 'yaml', 'jproperties' },
   keys = {
     {
       '<leader>jsb',
@@ -27,11 +27,10 @@ return {
   },
   opts = function()
     -- spring boot ls wants a modern jdk, $JAVA_HOME may point at an older asdf install
-    local java_home = vim.fn.executable('/usr/libexec/java_home') == 1
-        and vim.trim(vim.fn.system({ '/usr/libexec/java_home', '-v', '21' }))
-      or nil
+    local java_home = require('jdk').find('25')
     return {
-      java_cmd = (java_home and vim.v.shell_error == 0) and java_home .. '/bin/java' or nil,
+      filetypes = { 'java', 'kotlin', 'yaml', 'jproperties' },
+      java_cmd = java_home and java_home .. '/bin/java' or nil,
       -- the built-in autocmd resolves root_dir once and reuses it forever, so a
       -- buffer from a second project attaches to the first project's server.
       -- driven per buffer in `config` instead.
@@ -62,7 +61,7 @@ return {
 
     vim.api.nvim_create_autocmd('FileType', {
       group = vim.api.nvim_create_augroup('SpringBoot', { clear = true }),
-      pattern = { 'java', 'yaml', 'jproperties' },
+      pattern = { 'java', 'kotlin', 'yaml', 'jproperties' },
       callback = start,
     })
 

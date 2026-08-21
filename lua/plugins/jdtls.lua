@@ -1,40 +1,22 @@
 -- java lsp
 --
 -- eclipse.jdt.ls needs a JDK 21+ to *run*, even when the project targets an older release.
--- $JAVA_HOME points at the active asdf install, so the launcher JDK is resolved separately.
-local jdtls_jdk_version = '21'
+-- $JAVA_HOME points at the active asdf install (17), so the launcher JDK is resolved separately.
+local jdtls_jdk_version = '25'
+
+local jdk = require('jdk')
 
 -- Registered with jdtls so projects can target them (see `:JdtSetRuntime`).
 local project_runtimes = {
   { name = 'JavaSE-17', version = '17' },
   { name = 'JavaSE-21', version = '21' },
+  { name = 'JavaSE-25', version = '25' },
 }
-
----@param version string
----@return string|nil
-local function find_jdk(version)
-  if vim.fn.executable('/usr/libexec/java_home') == 1 then
-    local home = vim.fn.system({ '/usr/libexec/java_home', '-v', version })
-    if vim.v.shell_error == 0 then
-      return vim.trim(home)
-    end
-  end
-
-  for _, path in ipairs({
-    '/Library/Java/JavaVirtualMachines/openjdk-' .. version .. '/Contents/Home',
-    vim.fn.expand('~/.asdf/installs/java/openjdk-' .. version),
-    '/usr/lib/jvm/java-' .. version .. '-openjdk',
-  }) do
-    if vim.fn.isdirectory(path) == 1 then
-      return path
-    end
-  end
-end
 
 local function runtimes()
   local found = {}
   for _, runtime in pairs(project_runtimes) do
-    local path = find_jdk(runtime.version)
+    local path = jdk.find(runtime.version)
     if path then
       table.insert(found, { name = runtime.name, path = path })
     end
@@ -109,7 +91,7 @@ return {
 
     local cmd = { vim.fn.expand('$MASON/bin/jdtls') }
 
-    local launcher_jdk = find_jdk(jdtls_jdk_version)
+    local launcher_jdk = jdk.find(jdtls_jdk_version)
     if launcher_jdk then
       table.insert(cmd, '--java-executable=' .. launcher_jdk .. '/bin/java')
     end
@@ -261,7 +243,11 @@ return {
       end,
     })
 
-    -- the FileType autocmd above does not fire for the buffer that lazy loaded this plugin
-    attach_jdtls()
+    -- the FileType autocmd above does not fire for the buffer that lazy loaded
+    -- this plugin. spring-boot.nvim lists nvim-jdtls as a dependency and loads
+    -- on kotlin/yaml/jproperties too, so only attach for an actual java buffer.
+    if vim.bo.filetype == 'java' then
+      attach_jdtls()
+    end
   end,
 }

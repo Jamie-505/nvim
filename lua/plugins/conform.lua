@@ -10,6 +10,7 @@ local filetype_map = {
   java = {},
   javascript = { 'prettier' },
   json = {},
+  kotlin = { 'ktlint' },
   lua = { 'stylua' },
   sh = { 'shfmt' },
   typescript = { 'prettier' },
