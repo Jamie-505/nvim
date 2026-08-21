@@ -37,6 +37,7 @@ end
 M.filetype_linter_map = function()
   return {
     lua = 'luacheck',
+    kotlin = 'ktlint',
     markdown = 'markdownlint',
     sh = 'shellcheck',
     dart = 'trivy',
@@ -127,7 +128,8 @@ M.get_all_ensure_installed_mason_names = function()
     'jdtls',
     'js-debug-adapter',
     'json-lsp',
-    'kotlin-language-server',
+    'kotlin-lsp',
+    'ktlint',
     'lua-language-server',
     'luacheck',
     'markdownlint',

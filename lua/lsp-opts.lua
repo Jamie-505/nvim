@@ -143,7 +143,6 @@ M.capabilities = make_capabilities()
 local semantic_tokens_ok = {
   dockerls = true,
   jdtls = true,
-  kotlin_language_server = true,
   lua_ls = true,
   -- no qmljs treesitter parser installed, so these tokens are the only
   -- structured highlighting qml gets
@@ -430,7 +429,6 @@ M.defaults = function()
     'cssls',
     'docker_compose_language_service',
     'jsonls',
-    'kotlin_language_server',
     'pyright',
     'qmlls',
     'terraformls',
