@@ -39,6 +39,12 @@ return {
 
       return table.concat(information_table, ' - ')
     end
+    -- how far through a jetbrains academy course this buffer's file is. Reads
+    -- the memo `koans.progress` keeps, so it costs a table lookup per refresh.
+    local function koanProgress()
+      local ok, progress = pcall(require, 'koans.progress')
+      return ok and progress.component() or ''
+    end
     local function node_package_info()
       local ok, package_info = pcall(require, 'package-info')
       if ok then
@@ -136,6 +142,13 @@ return {
         'selectioncount',
         node_package_info,
         flutterStatusLine,
+        {
+          koanProgress,
+          cond = function()
+            return koanProgress() ~= ''
+          end,
+          color = { fg = catppuccin_colors.mauve },
+        },
         {
           'lsp_status',
           icon = '',

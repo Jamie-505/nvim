@@ -193,6 +193,23 @@ return {
     end
 
     return {
+      -- koans.nvim's panel, repainted whenever a run finishes. Neotest only
+      -- registers consumers here, and koans is `cond`-gated on being inside a
+      -- course, so this is the inlined form of `neotest_consumer()` rather than
+      -- a call to it. See |koans-neotest|.
+      consumers = {
+        koan = function(client)
+          client.listeners.results = function()
+            -- the listener runs inside an nio task
+            vim.schedule(function()
+              local ok, progress = pcall(require, 'koans.progress')
+              if ok then
+                progress.invalidate()
+              end
+            end)
+          end
+        end,
+      },
       adapters = {
         require('neotest-dart')({
           -- change it to `dart` for Dart only tests
