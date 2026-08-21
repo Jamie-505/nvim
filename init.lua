@@ -84,5 +84,3 @@ vim.schedule(function()
   require('mappings')
 end)
 
--- apply fixes
-require('fixes')
