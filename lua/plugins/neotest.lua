@@ -50,6 +50,20 @@ return {
       desc = 'Test Toggle summary',
     },
     {
+      '<leader>To',
+      function()
+        require('neotest').output.open({ enter = true, auto_close = true })
+      end,
+      desc = 'Test Output for nearest',
+    },
+    {
+      '<leader>TO',
+      function()
+        require('neotest').output_panel.toggle()
+      end,
+      desc = 'Test Toggle output panel',
+    },
+    {
       '<leader>Tl',
       function()
         require('neotest').run.run_last()
