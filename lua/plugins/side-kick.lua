@@ -109,6 +109,13 @@ return {
         desc = 'Sidekick toggle claude',
       },
       {
+        '<leader>aC',
+        function()
+          require('sidekick.cli').toggle({ name = 'codex', focus = true })
+        end,
+        desc = 'Sidekick toggle codex',
+      },
+      {
         '<leader>ao',
         function()
           require('sidekick.cli').toggle({ name = 'opencode', focus = true })
