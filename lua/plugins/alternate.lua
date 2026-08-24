@@ -8,18 +8,18 @@
 --
 -- A virtual plugin: nothing to install, loaded on first use.
 
---- Directory segments that pair up. Applied in both directions.
-local DIR_SWAPS = {
-  { 'test', 'src' },
-  { 'tests', 'src' },
-  { 'test', 'main' },
-  { 'tests', 'main' },
-  { 'test', 'lib' },
-  { 'tests', 'lib' },
-  { 'spec', 'src' },
-  { 'spec', 'lib' },
-  { '__tests__', '' },
-}
+--- Directory segments that mean "test", and the ones that mean "implementation".
+--- Every test word pairs with every source word, in both directions, and a test
+--- folder also pairs with its own parent (`__tests__/foo.js` -> `foo.js`).
+local TEST_DIRS = { 'test', 'tests', 'spec', 'specs', '__tests__' }
+local SOURCE_DIRS = { 'src', 'main', 'lib' }
+
+--- The same words as a set: for recognising a test folder, and for the
+--- basenames that name the test of a whole folder rather than of one file.
+local TEST_WORD = {}
+for _, dir in ipairs(TEST_DIRS) do
+  TEST_WORD[dir] = true
+end
 
 --- Name affixes that mark a test file. Longest first, so that `Tests` wins over
 --- `Test` and `.spec` over `Spec` -- otherwise `foo.spec` would strip down to
@@ -40,27 +40,33 @@ local SUFFIXES = {
 }
 local PREFIXES = { 'test_', 'test-', 'Test' }
 
---- Basenames that name the test of a whole folder rather than of one file.
-local GENERIC = { test = true, tests = true, spec = true, specs = true }
+--- Is `text` the affix `affix`? One carrying a separator (`_test`) is
+--- unambiguous enough to match in any case; a bare camel-case one has to match
+--- exactly, or `contest` would read as the test of `con`.
+--- @param text string
+--- @param affix string
+--- @return boolean
+local function matches(text, affix)
+  return text == affix or (affix:find('[%.%-_]') ~= nil and text:lower() == affix:lower())
+end
 
 --- @param path string
 --- @return string|nil
 local function repo_root(path)
-  local marker = vim.fs.find({ '.git' }, { path = vim.fs.dirname(path), upward = true })[1]
-  return marker and vim.fs.dirname(marker) or vim.uv.cwd()
+  return vim.fs.root(vim.fs.dirname(path), '.git') or vim.uv.cwd()
 end
 
 --- @param name string basename without extension
 --- @return string|nil base the name with its test affix removed
 local function strip_affix(name)
   for _, suffix in ipairs(SUFFIXES) do
-    if #name > #suffix and name:sub(-#suffix):lower() == suffix:lower() then
+    if #name > #suffix and matches(name:sub(-#suffix), suffix) then
       -- drop a separator the affix left behind (Foo.Spec -> Foo. -> Foo)
       return (name:sub(1, #name - #suffix):gsub('[%.%-_]$', ''))
     end
   end
   for _, prefix in ipairs(PREFIXES) do
-    if #name > #prefix and name:sub(1, #prefix):lower() == prefix:lower() then
+    if #name > #prefix and matches(name:sub(1, #prefix), prefix) then
       return name:sub(#prefix + 1)
     end
   end
@@ -71,12 +77,11 @@ end
 --- @return boolean
 local function is_test(path)
   local name = vim.fn.fnamemodify(path, ':t:r')
-  if GENERIC[name:lower()] or strip_affix(name) then
+  if TEST_WORD[name:lower()] or strip_affix(name) then
     return true
   end
   for segment in vim.fs.dirname(path):gmatch('[^/]+') do
-    local lower = segment:lower()
-    if lower == 'test' or lower == 'tests' or lower == 'spec' or lower == '__tests__' then
+    if TEST_WORD[segment:lower()] then
       return true
     end
   end
@@ -103,40 +108,42 @@ local function candidate_names(name, test)
   for _, prefix in ipairs(PREFIXES) do
     table.insert(affixed, prefix .. name)
   end
-  return affixed, { name, 'tests', 'test', 'spec' }
+  return affixed, vim.list_extend({ name }, TEST_DIRS)
 end
 
 --- Directories the counterpart could live in.
 --- @param dir string
 --- @return string[]
 local function candidate_dirs(dir)
-  local dirs = { dir }
-  local seen = { [dir] = true }
+  local segments = vim.split(dir, '/')
+  local dirs, seen = { dir }, { [dir] = true }
 
-  for _, pair in ipairs(DIR_SWAPS) do
-    for _, direction in ipairs({ { pair[1], pair[2] }, { pair[2], pair[1] } }) do
-      local from, to = direction[1], direction[2]
-      if from ~= '' then
-        local segments = vim.split(dir, '/')
-        local changed = false
-        local swapped = {}
-        for _, segment in ipairs(segments) do
-          if segment:lower() == from then
-            changed = true
-            if to ~= '' then
-              table.insert(swapped, to)
-            end
-          else
-            table.insert(swapped, segment)
-          end
+  --- Rewrite every `from` segment of `dir` as `to`; an empty `to` drops it.
+  local function swap(from, to)
+    local swapped, changed = {}, false
+    for _, segment in ipairs(segments) do
+      if segment:lower() == from then
+        changed = true
+        if to ~= '' then
+          table.insert(swapped, to)
         end
-        local candidate = table.concat(swapped, '/')
-        if changed and not seen[candidate] then
-          seen[candidate] = true
-          table.insert(dirs, candidate)
-        end
+      else
+        table.insert(swapped, segment)
       end
     end
+    local candidate = table.concat(swapped, '/')
+    if changed and not seen[candidate] then
+      seen[candidate] = true
+      table.insert(dirs, candidate)
+    end
+  end
+
+  for _, test in ipairs(TEST_DIRS) do
+    for _, source in ipairs(SOURCE_DIRS) do
+      swap(test, source)
+      swap(source, test)
+    end
+    swap(test, '')
   end
 
   return dirs
@@ -165,13 +172,14 @@ local function search(root, names)
   if vim.fn.executable('fd') == 0 or #names == 0 then
     return {}
   end
+  -- fd matches with a regex, so escape every punctuation byte of the name.
+  -- Only ASCII punctuation is magic, so UTF-8 names pass through untouched.
   local escaped = vim.tbl_map(function(name)
-    return vim.pesc(name):gsub('%%', '\\')
+    return (name:gsub('%p', '\\%0'))
   end, names)
   local pattern = '^(' .. table.concat(escaped, '|') .. ')\\.[^.]+$'
-  local result = vim
-    .system({ 'fd', '--type', 'f', '--hidden', '--absolute-path', '--exclude', '.git', pattern, root })
-    :wait()
+  local result =
+    vim.system({ 'fd', '--type', 'f', '--hidden', '--absolute-path', '--exclude', '.git', pattern, root }):wait()
   if result.code ~= 0 then
     return {}
   end
@@ -217,12 +225,12 @@ local function counterparts(path)
 
   -- a test named after its folder has no name to work from, so offer what lives
   -- in the paired folder, minus the files that have a test of their own
-  if #found == 0 and test and GENERIC[name:lower()] then
+  if #found == 0 and test and TEST_WORD[name:lower()] then
     for _, candidate_dir in ipairs(dirs) do
       if candidate_dir ~= dir then
         for _, entry in ipairs(vim.fn.glob(candidate_dir .. '/*.' .. extension, false, true)) do
           local claimed = false
-          for _, candidate in ipairs(({ candidate_names(vim.fn.fnamemodify(entry, ':t:r'), false) })[1]) do
+          for _, candidate in ipairs(candidate_names(vim.fn.fnamemodify(entry, ':t:r'), false)) do
             if vim.fn.filereadable(dir .. '/' .. candidate .. '.' .. extension) == 1 then
               claimed = true
               break
@@ -301,7 +309,7 @@ return {
   cmd = { 'A', 'AV', 'AS' },
   keys = {
     {
-      '<leader>a',
+      '<leader>ga',
       function()
         alternate('edit')
       end,
