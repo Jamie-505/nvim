@@ -72,6 +72,11 @@ return {
     return {
       formatters_by_ft = filetype_map,
       formatters = {
+        prettier = {
+          -- Use single quotes by default, while allowing a project's
+          -- Prettier config to override this preference.
+          prepend_args = { '--single-quote', '--no-semi', '--config-precedence=prefer-file' },
+        },
         dart_format = {
           args = function()
             local args_table = { 'format', '$FILENAME' }
