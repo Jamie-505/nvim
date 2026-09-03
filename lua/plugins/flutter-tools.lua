@@ -7,6 +7,7 @@ return {
     'mfussenegger/nvim-dap',
   },
   keys = {
+    { '<leader>fl', desc = '+Flutter', mode = { 'n', 'x' } },
     {
       '<leader>flc',
       function()

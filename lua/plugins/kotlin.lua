@@ -8,6 +8,7 @@ return {
   },
   ft = 'kotlin',
   keys = {
+    { '<leader>k', desc = '+Kotlin', mode = { 'n', 'x' } },
     { '<leader>koi', '<CMD>KotlinOrganizeImports<CR>', desc = 'Kotlin Organize imports' },
     { '<leader>kgt', '<CMD>KotlinTypeDefinition<CR>', desc = 'Kotlin Go to type definition' },
     { '<leader>kgi', '<CMD>KotlinImplementation<CR>', desc = 'Kotlin Go to implementation' },
