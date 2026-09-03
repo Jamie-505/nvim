@@ -26,6 +26,11 @@ return {
   },
   ---@type OctoConfig
   opts = {
+    -- maps ~/.ssh/config Host aliases to the real API host
+    ssh_aliases = {
+      ['github-work'] = 'github.com',
+      ['github-personal'] = 'github.com',
+    },
     mappings_disable_default = false,
     mappings = {
       review_diff = {
