@@ -60,6 +60,7 @@ return {
   {
     'NorinB/sidekick.nvim',
     keys = {
+      { '<leader>a', desc = '+AI', mode = { 'n', 'x' } },
       {
         '<leader>aa',
         function()

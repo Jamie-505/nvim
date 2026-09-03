@@ -13,6 +13,7 @@ map('n', '<leader>w', '<CMD>w<CR>', { desc = 'Save file' })
 map('n', '<leader>os', "<CMD>silent !open '%'<CR>", { desc = 'open current file with OS handler' })
 
 -- Buffer
+map({ 'n', 'x' }, '<leader>b', '', { desc = '+Buffer' })
 map('n', '<leader>bn', '<CMD>enew<CR>', { desc = 'Buffer New' })
 
 -- Tabs
