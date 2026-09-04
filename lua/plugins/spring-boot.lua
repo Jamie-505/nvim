@@ -2,7 +2,7 @@
 return {
   'JavaHello/spring-boot.nvim',
   dependencies = { 'mfussenegger/nvim-jdtls' },
-  ft = { 'java', 'kotlin', 'yaml', 'jproperties' },
+  ft = { 'java', 'kotlin', 'jproperties' },
   keys = {
     {
       '<leader>jsb',

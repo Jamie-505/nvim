@@ -83,4 +83,3 @@ require('commands')
 vim.schedule(function()
   require('mappings')
 end)
-

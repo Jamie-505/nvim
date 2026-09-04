@@ -16,5 +16,7 @@ return {
     },
   },
   ---@type CommentConfig
-  opts = {},
+  -- gc/gcc are owned by undo-glow.nvim; Comment.nvim's defaults would override
+  -- them once it loads via <leader>/
+  opts = { mappings = false },
 }

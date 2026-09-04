@@ -11,7 +11,7 @@ return {
     'weilbith/neotest-gradle',
   },
   -- commit = '52fca6717ef972113ddd6ca223e30ad0abb2800c',
-  cmd = 'Neotest summary',
+  cmd = 'Neotest',
   event = { 'BufEnter *spec*', 'BufEnter *test*' },
   keys = {
     {
@@ -112,12 +112,14 @@ return {
       return root
     end
 
+    -- upstream only matches the `FooTest.kt` suffix convention, which the koans
+    -- (`tests.kt`) never hit. match both rather than replacing one with the other.
     package.loaded['neotest-gradle.hooks.is_test_file'] = function(path)
       local name = vim.fs.basename(path)
       if not name:match('%.kt$') and not name:match('%.java$') then
         return false
       end
-      return name:match('^[Tt]est') ~= nil
+      return name:match('^[Tt]est') ~= nil or name:match('Test%.kt$') ~= nil or name:match('Test%.java$') ~= nil
     end
 
     -- junit4 koans annotate with `@Test(timeout = 1000)`, which parses as
@@ -150,6 +152,16 @@ return {
     -- adapter's `require(...)` strings makes neotest parse in this process.
     local gradle = require('neotest-gradle')
     local position_queries = require('neotest-gradle.position_queries')
+
+    -- neotest keys adapters as `<name>:<root>`, so `root` has to answer the same
+    -- for the cwd and for any file under it. `find_project_directory` above is
+    -- deliberately per-module (it is what `--project-dir` wants), so using it as
+    -- `root` registered a second adapter instance and every test showed twice.
+    -- the reactor root is the stable answer; fall back for single-module repos.
+    local reactor_root = require('neotest.lib').files.match_root_pattern('settings.gradle', 'settings.gradle.kts')
+    gradle.root = function(path)
+      return reactor_root(path) or gradle_root(path)
+    end
     local build_position = require('neotest-gradle.hooks.discover_positions.build_position')
 
     gradle.discover_positions = function(path)
@@ -165,17 +177,58 @@ return {
       })
     end
 
+    local ui = require('neotest.lib.ui')
+    local open_buf = ui.open_buf
+    ui.open_buf = function(bufnr, line, column)
+      local has_editable_window = false
+      for _, win in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+        if vim.api.nvim_win_get_config(win).relative == '' and vim.bo[vim.api.nvim_win_get_buf(win)].buftype == '' then
+          has_editable_window = true
+          break
+        end
+      end
+      -- every window is a sidebar/summary/console, so make somewhere to land.
+      -- `vnew`, not `vsplit`: a split would just clone the special buffer.
+      if not has_editable_window then
+        vim.cmd('topleft vnew')
+      end
+      return open_buf(bufnr, line, column)
+    end
+
     -- the adapter concatenates its argv into a single shell string, so a koan
     -- folder like `Default arguments` splits into two shell words and gradle
     -- runs in the wrong dir. re-quote the executable and the project dir.
+    -- the adapter hardcodes the `test` task, so a custom source set never runs:
+    -- its classes aren't on `test`'s testClassesDirs, the `--tests` filter matches
+    -- nothing, and the reports land under a different directory. gradle names the
+    -- Test task after the source set, which is the path segment after `src/`.
+    local function gradle_test_task(path)
+      return path:match('/src/([^/]+)/') or 'test'
+    end
+
     local build_spec = gradle.build_spec
     gradle.build_spec = function(args)
       local spec = build_spec(args)
-      if spec and spec.command then
-        local dir = require('neotest-gradle.hooks.find_project_directory')(args.tree:data().path)
-        spec.command = (spec.command:gsub('^(.-)%s+%-%-project%-dir%s+' .. vim.pesc(dir or ''), function(executable)
-          return vim.fn.shellescape(executable) .. ' --project-dir ' .. vim.fn.shellescape(dir) .. ' '
-        end))
+      local path = args.tree:data().path
+      local dir = require('neotest-gradle.hooks.find_project_directory')(path)
+      local task = gradle_test_task(path)
+      if spec and spec.command and dir then
+        spec.command = (
+          spec.command:gsub('^(.-)%s+%-%-project%-dir%s+' .. vim.pesc(dir) .. '%s+test', function(executable)
+            return vim.fn.shellescape(executable) .. ' --project-dir ' .. vim.fn.shellescape(dir) .. ' ' .. task
+          end)
+        )
+      end
+      -- gradle 9 dropped the `testResultsDir` project property, so the adapter's
+      -- `properties --property testResultsDir` prints "null" and it builds the
+      -- path "null/test". resolve the task's real report directory instead.
+      if spec and dir then
+        spec.context = spec.context or {}
+        local expected = vim.fs.joinpath(dir, 'build', 'test-results', task)
+        local reported = spec.context.test_resuls_directory
+        if vim.fn.isdirectory(expected) == 1 or not reported or reported == '' or vim.fn.isdirectory(reported) == 0 then
+          spec.context.test_resuls_directory = expected
+        end
       end
       return spec
     end
@@ -183,16 +236,28 @@ return {
     -- when gradle fails before writing any junit report the adapter asserts on
     -- the missing directory and throws a traceback over the run. the output
     -- panel already carries the real error, so just report no results.
-    local results = gradle.results
+    local collect_results = gradle.results
     gradle.results = function(spec, run_result, tree)
       local directory = (spec.context or {}).test_resuls_directory
       if not directory or vim.fn.isdirectory(directory) == 0 then
-        return {}
+        -- returning `{}` would leave the positions in `running` forever, so the
+        -- summary just spins. mark them failed and point at the output panel.
+        local failed = {}
+        for _, position in tree:iter() do
+          if position.type == 'test' or position.type == 'namespace' then
+            failed[position.id] = {
+              status = 'failed',
+              short = 'no junit reports at ' .. tostring(directory) .. ' - see the output panel',
+            }
+          end
+        end
+        return failed
       end
-      return results(spec, run_result, tree)
+      return collect_results(spec, run_result, tree)
     end
 
     return {
+      floating = { border = 'rounded' },
       -- koans.nvim's panel, repainted whenever a run finishes. Neotest only
       -- registers consumers here, and koans is `cond`-gated on being inside a
       -- course, so this is the inlined form of `neotest_consumer()` rather than
@@ -226,20 +291,24 @@ return {
         require('neotest-jest')({
           jestCommand = 'npm test --',
           jestConfigFile = function(file)
+            local default = vim.fn.getcwd() .. '/jest.config.ts'
+
             if string.find(file, '/packages/') then
-              return string.match(file, '(.-/[^/]+/)src') .. 'jest.config.ts'
+              local pkg_root = string.match(file, '(.-/[^/]+/)src')
+              return pkg_root and pkg_root .. 'jest.config.ts' or default
             end
 
             if string.find(file, 'e2e-spec', 1, true) then
-              local fs = vim.fs
-              local path = fs.dirname(fs.find({ 'jest-e2e.json' }, {
+              local found = vim.fs.find({ 'jest-e2e.json' }, {
                 path = file,
                 upward = true,
-              })[1]) .. '/jest-e2e.json'
-              return path
+              })[1]
+              if found then
+                return found
+              end
             end
 
-            return vim.fn.getcwd() .. '/jest.config.ts'
+            return default
           end,
           env = { CI = true },
           cwd = function(path)

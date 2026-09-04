@@ -1,4 +1,4 @@
--- scope highlighting
+-- keep the cursor line vertically centered
 return {
   'arnamak/stay-centered.nvim',
   keys = function()

@@ -1,6 +1,6 @@
 local filetype_map = {
   bash = { 'shfmt' },
-  bib = { 'texlab' },
+  bib = { 'bibtex-tidy' },
   cs = { 'csharpier' },
   dart = { 'dart_format' },
   html = { 'prettier' },
@@ -9,11 +9,13 @@ local filetype_map = {
   -- buffers so `format_after_save` can fall back to jdtls
   java = {},
   javascript = { 'prettier' },
+  javascriptreact = { 'prettier' },
   json = {},
   kotlin = { 'ktlint' },
   lua = { 'stylua' },
   sh = { 'shfmt' },
   typescript = { 'prettier' },
+  typescriptreact = { 'prettier' },
   yaml = { 'yamlfmt' },
 }
 
@@ -31,7 +33,7 @@ return {
     {
       '<leader>bf',
       function()
-        require('conform').format({ lsp_fallback = true })
+        require('conform').format({ lsp_format = 'fallback' })
       end,
       desc = 'General Format file',
     },
@@ -78,10 +80,10 @@ return {
           prepend_args = { '--single-quote', '--no-semi', '--config-precedence=prefer-file' },
         },
         dart_format = {
-          args = function()
+          args = function(_, ctx)
             local args_table = { 'format', '$FILENAME' }
 
-            if string.match(vim.fn.expand('%:p'), 'projects') then
+            if string.match(ctx.filename, 'projects') then
               local additional_args = { '-l', '120' }
 
               for _, arg in pairs(additional_args) do

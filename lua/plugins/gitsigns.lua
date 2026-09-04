@@ -4,8 +4,8 @@ return {
   keys = {
     { '<leader>ghr', '<CMD>Gitsigns reset_hunk<CR>', desc = 'Git Reset Hunk' },
     { '<leader>ghp', '<CMD>Gitsigns preview_hunk<CR>', desc = 'Git Preview Hunk' },
-    { '<leader>ghn', '<CMD>Gitsigns next_hunk<CR>', desc = 'Git Blame Next Hunk' },
-    { '<leader>ghN', '<CMD>Gitsigns prev_hunk<CR>', desc = 'Git Blame Previous Hunk' },
+    { '<leader>ghn', '<CMD>Gitsigns next_hunk<CR>', desc = 'Git Next Hunk' },
+    { '<leader>ghN', '<CMD>Gitsigns prev_hunk<CR>', desc = 'Git Previous Hunk' },
     { '<leader>gbl', '<CMD>Gitsigns blame_line<CR>', desc = 'Git Blame Line' },
     { '<leader>gbc', '<CMD>Gitsigns blame<CR>', desc = 'Git Blame Current Buffer' },
   },

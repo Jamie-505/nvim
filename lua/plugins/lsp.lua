@@ -87,11 +87,10 @@ return {
         end)
         :totable()
       require('nvim-treesitter').install(parsers_to_install)
-      require('nvim-treesitter').update()
 
       -- Add Custom Filetypes
       local function is_tmux_conf(path)
-        return path:match('%tmux.conf$')
+        return path:match('tmux%.conf$')
       end
 
       local function check_yaml_file(path)
@@ -120,19 +119,15 @@ return {
       })
 
       -- Angular
-      local function is_angular_template(path)
-        return path:match('%.component%.html$')
-      end
+      -- nvim >= 0.11 already detects *.component.html as htmlangular; this only
+      -- covers older versions. BufEnter is deliberately excluded so switching
+      -- buffers does not re-fire FileType (treesitter restart, LSP re-attach).
       vim.api.nvim_create_augroup('AngularTemplates', {})
-      vim.api.nvim_create_autocmd({ 'BufRead', 'BufEnter', 'BufNewFile' }, {
+      vim.api.nvim_create_autocmd({ 'BufRead', 'BufNewFile' }, {
         pattern = '*.component.html',
-        callback = function()
-          -- Set filetype to HTML in order for html related plugins to work
-          vim.bo.filetype = 'html'
-
-          -- Set filetype to angular for treesitter specifically
-          if is_angular_template(vim.fn.expand('<afile>:p')) then
-            vim.cmd('set filetype=htmlangular')
+        callback = function(ctx)
+          if vim.bo[ctx.buf].filetype ~= 'htmlangular' then
+            vim.bo[ctx.buf].filetype = 'htmlangular'
           end
         end,
         group = 'AngularTemplates',
@@ -145,9 +140,12 @@ return {
           -- highlights
           local hasStarted = pcall(vim.treesitter.start) -- errors for filetypes with no parser
 
+          -- legacy syntax fallback for filetypes treesitter cannot handle
+          if not hasStarted then
+            vim.cmd('syntax enable')
+          end
+
           -- folds
-          local bufnr = ctx.buf
-          vim.bo[bufnr].syntax = 'on'
           vim.wo.foldlevel = 99
           vim.wo.foldmethod = 'expr'
           vim.wo.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
@@ -326,7 +324,7 @@ return {
         end
       end, {})
 
-      vim.g.mason_binaries_list = opts.options.ensure_installed
+      vim.g.mason_binaries_list = opts.options.ensure_installed_mason_names
     end,
   },
   {
@@ -343,7 +341,6 @@ return {
   {
     'rachartier/tiny-inline-diagnostic.nvim',
     -- dependencies = { "https://git.sr.ht/~whynothugo/lsp_lines.nvim" },
-    priority = 1000, -- needs to be loaded in first
     event = 'VeryLazy', -- Or `LspAttach`
     keys = function()
       --tiny-inline-diagnostic and lsp_lines toggle through
@@ -404,28 +401,30 @@ return {
         desc = 'Goto-Preview Go to definition (via popup)',
       },
     },
-    opts = {
-      width = 120, -- Width of the floating window
-      height = 15, -- Height of the floating window
-      border = { '↖', '─', '┐', '│', '┘', '─', '└', '│' }, -- Border characters of the floating window
-      default_mappings = false, -- Bind default mappings
-      debug = false, -- Print debug information
-      opacity = nil, -- 0-100 opacity level of the floating window where 100 is fully transparent.
-      resizing_mappings = false, -- Binds arrow keys to resizing the floating window.
-      post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
-      post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
-      references = { -- Configure the telescope UI for slowing the references cycling window.
-        telescope = require('telescope.themes').get_dropdown({ hide_preview = false }),
-      },
-      -- These two configs can also be passed down to the goto-preview definition and implementation calls for one off "peak" functionality.
-      focus_on_open = true, -- Focus the floating window when opening it.
-      dismiss_on_move = false, -- Dismiss the floating window when moving the cursor.
-      force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
-      bufhidden = 'wipe', -- the bufhidden option to set on the floating window. See :h bufhidden
-      stack_floating_preview_windows = true, -- Whether to nest floating windows
-      preview_window_title = { enable = true, position = 'left' }, -- Whether to set the preview window title as the filename
-      zindex = 1, -- Starting zindex for the stack of floating windows
-    },
+    opts = function()
+      return {
+        width = 120, -- Width of the floating window
+        height = 15, -- Height of the floating window
+        border = { '↖', '─', '┐', '│', '┘', '─', '└', '│' }, -- Border characters of the floating window
+        default_mappings = false, -- Bind default mappings
+        debug = false, -- Print debug information
+        opacity = nil, -- 0-100 opacity level of the floating window where 100 is fully transparent.
+        resizing_mappings = false, -- Binds arrow keys to resizing the floating window.
+        post_open_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+        post_close_hook = nil, -- A function taking two arguments, a buffer and a window to be ran as a hook.
+        references = { -- Configure the telescope UI for slowing the references cycling window.
+          telescope = require('telescope.themes').get_dropdown({ hide_preview = false }),
+        },
+        -- These two configs can also be passed down to the goto-preview definition and implementation calls for one off "peak" functionality.
+        focus_on_open = true, -- Focus the floating window when opening it.
+        dismiss_on_move = false, -- Dismiss the floating window when moving the cursor.
+        force_close = true, -- passed into vim.api.nvim_win_close's second argument. See :h nvim_win_close
+        bufhidden = 'wipe', -- the bufhidden option to set on the floating window. See :h bufhidden
+        stack_floating_preview_windows = true, -- Whether to nest floating windows
+        preview_window_title = { enable = true, position = 'left' }, -- Whether to set the preview window title as the filename
+        zindex = 1, -- Starting zindex for the stack of floating windows
+      }
+    end,
   },
   {
     'ray-x/lsp_signature.nvim',

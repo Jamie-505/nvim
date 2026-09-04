@@ -2,7 +2,7 @@ return {
   {
     'mfussenegger/nvim-dap',
     keys = {
-      { '<leader>D', '<CMD>DapNew<CR>', desc = 'Debug New' },
+      { '<leader>dN', '<CMD>DapNew<CR>', desc = 'Debug New' },
       { '<leader>dba', '<CMD>DapClearBreakpoints<CR>', desc = 'Debug Clear Breakpoints' },
       {
         '<leader>dbc',
@@ -132,7 +132,7 @@ return {
 
       local chromeAdapter = function()
         dap.adapters['pwa-chrome'] = {
-          type = 'executable',
+          type = 'server',
           host = 'localhost',
           port = '${port}',
           executable = {
@@ -371,7 +371,7 @@ return {
     end,
     config = function(_, opts)
       vim.fn.sign_define('DapBreakpoint', { text = '󰙧', numhl = 'DapBreakpoint', texthl = 'DapBreakpoint' })
-      vim.fn.sign_define('DagLogPoint', { text = '', numhl = 'DapLogPoint', texthl = 'DapLogPoint' })
+      vim.fn.sign_define('DapLogPoint', { text = '', numhl = 'DapLogPoint', texthl = 'DapLogPoint' })
       vim.fn.sign_define('DapStopped', { text = '', numhl = 'DapStopped', texthl = 'DapStopped' })
       vim.fn.sign_define(
         'DapBreakpointRejected',

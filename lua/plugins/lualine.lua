@@ -114,7 +114,7 @@ return {
       lualine_b = {
         {
           'filename',
-          color = { fg = 'lavender' },
+          color = { fg = catppuccin_colors.lavender },
           file_status = true,
           newfile_status = true,
           symbols = {
@@ -204,8 +204,8 @@ return {
         refresh = {
           statusline = 32,
         },
+        ignore_focus = {},
       },
-      ignore_focus = {},
       sections = sections,
       inactive_sections = sections,
       extensions = { 'trouble', 'mason', 'lazy' },
@@ -220,7 +220,6 @@ return {
         vim.api.nvim_set_hl(0, 'lualine_c_transparent', {
           bg = 'NONE',
         })
-        colors.set_colors('lualine_transparent')
         require('transparent').clear_prefix('lualine_x')
       end
       vim.api.nvim_set_hl(0, 'lualine_c_diff_added_normal', {

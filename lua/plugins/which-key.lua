@@ -12,16 +12,17 @@ return {
     'v',
     'g',
     '\\',
-    { '<leader>wka', '<CMD>WhichKey<CR>', desc = 'Whichkey Keymaps (all)' },
+    { '<leader>?', desc = '+Whichkey', mode = { 'n', 'x' } },
+    { '<leader>?a', '<CMD>WhichKey<CR>', desc = 'Whichkey Keymaps (all)' },
     {
-      '<leader>wkc',
+      '<leader>?c',
       function()
         require('which-key').show({ global = false })
       end,
       desc = 'Whichkey Keymaps (current buffer)',
     },
     {
-      '<leader>wkq',
+      '<leader>?q',
       function()
         vim.cmd('WhichKey ' .. vim.fn.input('WhichKey: '))
       end,

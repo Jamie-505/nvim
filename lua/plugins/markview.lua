@@ -1,7 +1,6 @@
 return {
   'OXY2DEV/markview.nvim',
   ft = 'markdown',
-  priority = 49,
   opts = {
     markdown = {
       headings = {

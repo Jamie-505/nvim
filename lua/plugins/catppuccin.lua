@@ -3,6 +3,7 @@ return {
   name = 'catppuccin',
   lazy = false,
   priority = 1000,
+  dependencies = { 'xiyaowong/transparent.nvim' },
   config = function()
     ---@type CatppuccinOptions
     require('catppuccin').setup({

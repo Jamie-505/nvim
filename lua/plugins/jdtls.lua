@@ -111,15 +111,12 @@ return {
     return {
       cmd = cmd,
 
+      -- nested lists = priority tiers: a multi-module submodule's build.gradle
+      -- must not outrank the reactor root's settings.gradle/gradlew/.git
       root_markers = {
-        'settings.gradle',
-        'settings.gradle.kts',
-        'pom.xml',
-        'build.gradle',
-        'build.gradle.kts',
-        'mvnw',
-        'gradlew',
-        '.git',
+        { 'settings.gradle', 'settings.gradle.kts' },
+        { 'gradlew', 'mvnw', '.git' },
+        { 'pom.xml', 'build.gradle', 'build.gradle.kts' },
       },
 
       dap = { hotcodereplace = 'auto', config_overrides = {} },

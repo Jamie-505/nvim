@@ -99,7 +99,6 @@ return {
       { '<leader>fgc', '<CMD>Telescope git_commits<CR>', desc = 'Telescope Git commits' },
       { '<leader>fgh', '<CMD>Telescope git_bcommits<CR>', desc = 'Telescope Git file history' },
       { '<leader>fgs', '<CMD>Telescope git_status<CR>', desc = 'Telescope Git status' },
-      { '<leader>fte', '<CMD>Telescope terms<CR>', desc = 'Telescope Terminals' },
       {
         '<leader>fa',
         '<CMD>Telescope find_files follow=true no_ignore=true hidden=true<CR>',
@@ -150,7 +149,7 @@ return {
             additional_args = { '--no-ignore', '--hidden' },
             file_ignore_patterns = {},
           },
-          find_file = {
+          find_files = {
             hidden = false,
           },
         },
@@ -190,7 +189,7 @@ return {
             preview_cutoff = 120,
           },
           file_sorter = require('telescope.sorters').get_fuzzy_file,
-          file_ignore_patterns = { '.git', '.angular' },
+          file_ignore_patterns = { '%.git/', '%.angular/' },
           path_display = { 'truncate', 'filename_first' },
           winblend = 0,
           border = {},
