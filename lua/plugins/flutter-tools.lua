@@ -81,11 +81,13 @@ return {
           local fs = vim.fs
           local buf = api.nvim_get_current_buf()
           local buffer_path = api.nvim_buf_get_name(buf)
-          local path = fs.dirname(fs.find({ '.git' }, {
+          -- root_patterns also allow non-git flutter projects, so .git may be absent
+          local git_dir = fs.find({ '.git' }, {
             path = buffer_path,
             upward = true,
-          })[1]) .. '/.vscode/launch.json'
-          require('dap.ext.vscode').load_launchjs(path)
+          })[1]
+          local root = git_dir and fs.dirname(git_dir) or (paths and paths.root) or vim.fn.getcwd()
+          require('dap.ext.vscode').load_launchjs(root .. '/.vscode/launch.json')
         end,
       },
       flutter_path = nil, -- <-- this takes priority over the lookup

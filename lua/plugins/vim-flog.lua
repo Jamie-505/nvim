@@ -1,5 +1,4 @@
 return {
-  lazy = false,
   'rbong/vim-flog',
   cmd = { 'Flog', 'Flogsplit', 'Floggit' },
   keys = {

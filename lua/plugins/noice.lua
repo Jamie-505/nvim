@@ -47,7 +47,7 @@ return {
     },
     popupmenu = {
       enabled = true,
-      backend = 'cmp',
+      backend = 'nui',
     },
     lsp = {
       hover = {

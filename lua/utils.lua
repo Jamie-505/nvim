@@ -14,6 +14,17 @@ M.run_global_function = function(name)
   end
 end
 
+--- Absolute path of the nearest `gradlew` at or above the cwd, else `gradle`.
+--- gradle.nvim has no wrapper support and its default assumes a system install.
+--- @return string
+M.gradle_executable = function()
+  local wrapper = vim.fs.find('gradlew', { path = vim.fn.getcwd(), upward = true, type = 'file' })[1]
+  if wrapper and vim.fn.executable(wrapper) == 1 then
+    return wrapper
+  end
+  return 'gradle'
+end
+
 local function is_terminal_window(win)
   local buf = vim.api.nvim_win_get_buf(win)
   return vim.api.nvim_get_option_value('buftype', { buf = buf }) == 'terminal'
@@ -34,9 +45,17 @@ end
 M.gotoDefinitionInSplit = function()
   -- Check how many windows are open
   local wins = vim.api.nvim_tabpage_list_wins(0)
-  local first_buffer = vim.api.nvim_win_get_buf(wins[1])
 
-  local nvim_tree_open = vim.api.nvim_get_option_value('filetype', { buf = first_buffer }) == 'NvimTree'
+  -- NvimTree is not guaranteed to be the first window of the tabpage
+  local nvim_tree_win
+  for _, win in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if vim.api.nvim_get_option_value('filetype', { buf = buf }) == 'NvimTree' then
+      nvim_tree_win = win
+      break
+    end
+  end
+  local nvim_tree_open = nvim_tree_win ~= nil
 
   local current_cursor_pos = vim.api.nvim_win_get_cursor(0)
 
@@ -57,7 +76,7 @@ M.gotoDefinitionInSplit = function()
       target_win = current_win
     else
       for _, win_num in pairs(wins) do
-        if win_num ~= current_win and win_num ~= wins[1] and not is_terminal_window(win_num) then
+        if win_num ~= current_win and win_num ~= nvim_tree_win and not is_terminal_window(win_num) then
           target_win = win_num
           break
         end
@@ -75,6 +94,10 @@ M.gotoDefinitionInSplit = function()
       vim.cmd('vsplit')
       target_win = current_win
     end
+  end
+
+  if target_win == nil then
+    return
   end
 
   -- Set buffer for new window

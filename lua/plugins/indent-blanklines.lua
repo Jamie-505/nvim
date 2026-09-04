@@ -43,10 +43,13 @@ return {
       })
     end)
 
+    -- ibl_setup is re-run on every transparency toggle; hooks.register appends,
+    -- so the whitespace hook is registered once here rather than inside it
+    local hooks = require('ibl.hooks')
+    hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
+
     require('utils').add_and_run_global_function('ibl_setup', function()
       require('ibl').setup(opts)
-      local hooks = require('ibl.hooks')
-      hooks.register(hooks.type.WHITESPACE, hooks.builtin.hide_first_space_indent_level)
       require('ibl').refresh()
     end)
   end,

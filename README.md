@@ -1,6 +1,7 @@
 # Neovim Config
 
 ## Needed Packages
+- fd
 - fzf
 - node/npm
 - ripgrep

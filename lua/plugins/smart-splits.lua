@@ -1,4 +1,4 @@
--- scope highlighting
+-- window navigation, resizing and buffer swapping
 return {
   'mrjones2014/smart-splits.nvim',
   lazy = false,
@@ -68,28 +68,28 @@ return {
       function()
         require('smart-splits').swap_buf_right()
       end,
-      desc = 'Window Resize right',
+      desc = 'Window Swap buffer right',
     },
     {
       '<M-Left>',
       function()
         require('smart-splits').swap_buf_left()
       end,
-      desc = 'Window Resize left',
+      desc = 'Window Swap buffer left',
     },
     {
       '<M-Up>',
       function()
         require('smart-splits').swap_buf_up()
       end,
-      desc = 'Window Resize up',
+      desc = 'Window Swap buffer up',
     },
     {
       '<M-Down>',
       function()
         require('smart-splits').swap_buf_down()
       end,
-      desc = 'Window Resize down',
+      desc = 'Window Swap buffer down',
     },
   },
   ---@type SmartSplitsConfig

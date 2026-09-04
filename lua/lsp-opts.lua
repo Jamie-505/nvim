@@ -7,8 +7,10 @@ local function apply_rename(currName, win)
   local newName = vim.trim(vim.fn.getline('.'))
   vim.api.nvim_win_close(win, true)
 
-  if string.len(newName) > 0 and newName ~= currName then
-    local params = vim.lsp.util.make_position_params(0, 'utf-8')
+  -- currName is padded with a trailing space for the popup; compare trimmed
+  if string.len(newName) > 0 and newName ~= vim.trim(currName) then
+    local client = vim.lsp.get_clients({ bufnr = 0 })[1]
+    local params = vim.lsp.util.make_position_params(0, client and client.offset_encoding or 'utf-16')
     params = vim.tbl_extend('force', params, { newName = newName })
 
     if spinner.should_show_spinner() then
@@ -133,7 +135,10 @@ local make_capabilities = function()
     dynamicRegistration = false,
     lineFoldingOnly = true,
   }
-  -- capabilities = require("blink.cmp").get_lsp_capabilities(M.capabilities)
+  local ok, blink = pcall(require, 'blink.cmp')
+  if ok then
+    capabilities = blink.get_lsp_capabilities(capabilities)
+  end
   return capabilities
 end
 
@@ -352,7 +357,7 @@ M.setup_keymaps = function()
   map('n', '<leader>lwr', vim.lsp.buf.remove_workspace_folder, opts('Lsp Remove workspace folder'))
   map({ 'n', 'v', 'x' }, '<leader>lca', vim.lsp.buf.code_action, opts('Lsp Code action'))
 
-  map('n', '<leader>lw', function()
+  map('n', '<leader>lwl', function()
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, opts('Lsp List workspace folders'))
 
@@ -442,11 +447,18 @@ M.defaults = function()
   -- LSPs with specific config
 
   -- Angular
-  local angular_json_path = vim.fs.dirname(vim.fs.find({ 'angular.json' }, {
-    path = vim.loop.cwd(),
-    upward = true,
-  })[1])
-  if angular_json_path ~= nil then
+  local angularls_configured = false
+  local setup_angularls = function()
+    if angularls_configured then
+      return
+    end
+    local angular_json_path = vim.fs.dirname(vim.fs.find({ 'angular.json' }, {
+      path = vim.loop.cwd(),
+      upward = true,
+    })[1])
+    if angular_json_path == nil then
+      return
+    end
     local ok, mason_registry = pcall(require, 'mason-registry')
     if not ok then
       vim.notify('mason-registry could not be loaded')
@@ -487,7 +499,14 @@ M.defaults = function()
       filetypes = { 'htmlangular', 'typescript', 'html', 'typescriptreact', 'typescript.tsx' },
     })
     vim.lsp.enable('angularls')
+    angularls_configured = true
   end
+  setup_angularls()
+  -- cwd at startup may not be inside the Angular project yet
+  vim.api.nvim_create_autocmd('DirChanged', {
+    group = vim.api.nvim_create_augroup('AngularLsSetup', {}),
+    callback = setup_angularls,
+  })
 
   -- Bash
   vim.lsp.config('bashls', {
@@ -512,17 +531,17 @@ M.defaults = function()
   -- Emmet Language Server
   vim.lsp.config('emmet_language_server', {
     filetypes = {
-      'htmlangular',
-      'htcss',
+      'css',
       'eruby',
       'html',
+      'htmlangular',
       'htmldjango',
       'javascriptreact',
       'less',
       'pug',
       'sass',
       'scss',
-      'typescriptreactml',
+      'typescriptreact',
     },
   })
   vim.lsp.enable('emmet_language_server')
@@ -590,7 +609,7 @@ M.defaults = function()
     end,
     init_options = {
       preferences = {
-        includeInlayParameterNameHints = 'literal', -- 'none' | 'literals' | 'all'
+        includeInlayParameterNameHints = 'literals', -- 'none' | 'literals' | 'all'
         includeInlayParameterNameHintsWhenArgumentMatchesName = false,
         includeInlayVariableTypeHints = true,
         includeInlayFunctionParameterTypeHints = true,

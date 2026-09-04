@@ -6,19 +6,19 @@ M.filetype_lsp_map = function()
     bashls = 'sh',
     cssls = 'css',
     docker_compose_language_service = 'yaml.docker-compose',
-    dockerls = 'docker',
+    dockerls = 'dockerfile',
     emmet_language_server = {
-      'htmlangular',
-      'htcss',
+      'css',
       'eruby',
       'html',
+      'htmlangular',
       'htmldjango',
       'javascriptreact',
       'less',
       'pug',
       'sass',
       'scss',
-      'typescriptreactml',
+      'typescriptreact',
     },
     eslint = {
       'javascript',
@@ -27,7 +27,7 @@ M.filetype_lsp_map = function()
     jsonls = 'json',
     pyright = 'python',
     qmlls = 'qml',
-    terraformls = 'tf',
+    terraformls = 'terraform',
     ts_ls = 'typescript',
     yamlls = 'yaml',
   }
@@ -40,7 +40,6 @@ M.filetype_linter_map = function()
     kotlin = 'ktlint',
     markdown = 'markdownlint',
     sh = 'shellcheck',
-    dart = 'trivy',
   }
 end
 
@@ -139,10 +138,8 @@ M.get_all_ensure_installed_mason_names = function()
     'qmlls',
     'shellcheck',
     'shfmt',
-    'sonarlint-language-server',
     'stylua',
     'terraform-ls',
-    'trivy',
     'typescript-language-server',
     'vscode-spring-boot-tools',
     'yaml-language-server',
