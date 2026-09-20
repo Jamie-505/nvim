@@ -62,7 +62,7 @@
   "package-info.nvim": { "branch": "master", "commit": "e2469495215f576771b4567786b3c5709e98d87a" },
   "plenary.nvim": { "branch": "master", "commit": "74b06c6c75e4eeb3108ec01852001636d85a932b" },
   "rainbow-delimiters.nvim": { "branch": "master", "commit": "012f1480cd9a5fc99fce7678e0a536421a53fc46" },
-  "sidekick.nvim": { "branch": "main", "commit": "71b9d610ef640cb8b07909074bf96e9f2a30a46c" },
+  "sidekick.nvim": { "branch": "main", "commit": "ab8be56c79b28539efaac964c29359f53915bde7" },
   "smart-open.nvim": { "branch": "0.2.x", "commit": "7763800068bef69334870c10cb595d49ce27580a" },
   "smart-splits.nvim": { "branch": "master", "commit": "5e92431aa7f5e618c2f6825f682df6d94f6e0a02" },
   "snacks.nvim": { "branch": "main", "commit": "882c996cf28183f4d63640de0b4c02ec886d01f2" },

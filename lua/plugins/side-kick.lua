@@ -58,7 +58,7 @@ end
 
 return {
   {
-    'NorinB/sidekick.nvim',
+    'Jamie-505/sidekick.nvim',
     keys = {
       { '<leader>a', desc = '+AI', mode = { 'n', 'x' } },
       {
@@ -179,7 +179,6 @@ return {
       nes = { enabled = false },
       cli = {
         mux = {
-          backend = 'tmux',
           enabled = true,
           create = 'split',
           split = {
@@ -193,24 +192,6 @@ return {
           diagnostics = '{diagnostics}',
           diagnostics_all = '{diagnostics_all}',
           this = '{this}',
-        },
-        context = {
-          visible = function(ctx)
-            local Loc = require('sidekick.cli.context.location')
-            local seen, ret = {}, {}
-            for _, win in ipairs(vim.api.nvim_list_wins()) do
-              local buf = vim.api.nvim_win_get_buf(win)
-              if not seen[buf] and Loc.is_file(buf) then
-                seen[buf] = true
-                local file = Loc.get({ buf = buf, cwd = ctx.cwd }, { kind = 'file' })[1]
-                if file then
-                  table.insert(file, 1, { '- ', '@markup.list.markdown' })
-                  ret[#ret + 1] = file
-                end
-              end
-            end
-            return ret
-          end,
         },
       },
     },
