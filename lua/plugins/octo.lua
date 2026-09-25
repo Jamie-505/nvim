@@ -99,7 +99,14 @@ return {
   -- commit = 'c14f5b6ee92f0b2717efd525211bcb6cebf03fa6',
   dependencies = {
     'nvim-lua/plenary.nvim',
-    -- 'nvim-telescope/telescope.nvim',
+    {
+      'Jamie-505/telescope-octo-review.nvim',
+      dir = vim.fn.expand('~/dev/private/telescope-octo-review.nvim'),
+      dependencies = { 'nvim-telescope/telescope.nvim' },
+      config = function()
+        require('telescope').load_extension('octo_review')
+      end,
+    },
     -- OR 'ibhagwan/fzf-lua',
     'folke/snacks.nvim',
     'nvim-tree/nvim-web-devicons',
@@ -129,6 +136,20 @@ return {
     { '<leader>OpU', '<CMD>Octo pr url<CR>', desc = 'Octo PR URL' },
     { '<leader>Ors', '<CMD>Octo review start<CR>', desc = 'Octo Review start' },
     { '<leader>Orr', '<CMD>Octo review resume<CR>', desc = 'Octo Review resume' },
+    {
+      '<leader>Ofc',
+      function()
+        require('telescope').extensions.octo_review.comments()
+      end,
+      desc = 'Octo Review find comment',
+    },
+    {
+      '<leader>Oft',
+      function()
+        require('telescope').extensions.octo_review.threads()
+      end,
+      desc = 'Octo Review find thread',
+    },
     { '<leader>Orq', '<CMD>Octo review close<CR>', desc = 'Octo Review quit/close' },
     { '<leader>Orc', '<CMD>Octo review commit<CR>', desc = 'Octo Review commit' },
     { '<leader>Ord', '<CMD>Octo review discard<CR>', desc = 'Octo Review discard' },
