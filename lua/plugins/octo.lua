@@ -96,7 +96,6 @@ end
 
 return {
   'pwntester/octo.nvim',
-  -- commit = 'c14f5b6ee92f0b2717efd525211bcb6cebf03fa6',
   dependencies = {
     'nvim-lua/plenary.nvim',
     {
