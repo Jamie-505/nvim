@@ -94,6 +94,37 @@ local function jump_global_review_thread(direction)
   end
 end
 
+-- re-fetch threads of the active review in place (e.g. pending comments added via web UI)
+local function refresh_review()
+  local review = require('octo.reviews').get_current_review()
+  if not review or review.id == -1 then
+    vim.notify('No active Octo review', vim.log.levels.WARN)
+    return
+  end
+
+  review:retrieve(function(resp)
+    local pr = vim.tbl_get(resp, 'data', 'repository', 'pullRequest')
+    if not pr then
+      vim.notify('Octo review refresh failed: unexpected response', vim.log.levels.ERROR)
+      return
+    end
+
+    local still_pending = false
+    for _, node in ipairs(pr.reviews.nodes) do
+      if node.viewerDidAuthor and node.id == review.id then
+        still_pending = true
+        break
+      end
+    end
+    if not still_pending then
+      vim.notify('Pending review no longer exists (submitted/discarded?)', vim.log.levels.WARN)
+    end
+
+    review:update_threads(pr.reviewThreads.nodes)
+    vim.notify('Octo review threads refreshed')
+  end)
+end
+
 return {
   'pwntester/octo.nvim',
   dependencies = {
@@ -135,6 +166,7 @@ return {
     { '<leader>OpU', '<CMD>Octo pr url<CR>', desc = 'Octo PR URL' },
     { '<leader>Ors', '<CMD>Octo review start<CR>', desc = 'Octo Review start' },
     { '<leader>Orr', '<CMD>Octo review resume<CR>', desc = 'Octo Review resume' },
+    { '<leader>OrR', refresh_review, desc = 'Octo Review refresh threads' },
     {
       '<leader>Ofc',
       function()
