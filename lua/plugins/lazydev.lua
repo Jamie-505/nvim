@@ -24,6 +24,8 @@ return {
       { path = 'rainbow-delimiters.nvim', words = { 'rainbow_delimiters' } },
       { path = 'sidekick.nvim', words = { 'sidekick%.' } },
       { path = 'smart-splits.nvim', words = { 'SmartSplits' } },
+      { path = 'backend-tmux', words = { 'TmuxBackend' } },
+      { path = 'smart-splits-backend-herdr', words = { 'HerdrBackend' } },
       { path = 'snacks.nvim', words = { 'Snacks', 'snacks%.' } },
       { path = 'undo-glow.nvim', words = { 'UndoGlow' } },
       { path = 'which-key.nvim', words = { 'wk%.' } },
