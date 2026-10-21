@@ -102,7 +102,6 @@ return {
             detached = false,
           },
         }
-        require('dap').defaults.flutter.exception_breakpoints = {}
       end
 
       local javascriptAdapter = function()
@@ -453,8 +452,30 @@ return {
     opts = {
       winbar = {
         default_section = 'repl',
+        sections = { 'watches', 'scopes', 'exceptions', 'breakpoints', 'threads', 'repl', 'filter' },
+        custom_sections = {
+          filter = {
+            label = function()
+              return require('dap-repl-filter').label()
+            end,
+            keymap = 'F',
+            buffer = function()
+              return require('dap-repl-filter').buffer()
+            end,
+            action = function()
+              require('dap-repl-filter').show()
+            end,
+          },
+        },
       },
     },
+    config = function(_, opts)
+      require('dap-view').setup(opts)
+      require('dap-view.state').exceptions_options.dart = {
+        { enabled = false, exception_filter = { filter = 'All', label = 'All Exceptions', default = false } },
+        { enabled = false, exception_filter = { filter = 'Unhandled', label = 'Uncaught Exceptions', default = true } },
+      }
+    end,
   },
   {
     'LiadOz/nvim-dap-repl-highlights',
