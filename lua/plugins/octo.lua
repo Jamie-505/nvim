@@ -164,9 +164,8 @@ return {
     { '<leader>Opo', '<CMD>Octo pr browse<CR>', desc = 'Octo PR open for current branch' },
     { '<leader>OpO', '<CMD>Octo pr browser<CR>', desc = 'Octo PR open for current branch in browser' },
     { '<leader>OpU', '<CMD>Octo pr url<CR>', desc = 'Octo PR URL' },
-    { '<leader>Ors', '<CMD>Octo review start<CR>', desc = 'Octo Review start' },
-    { '<leader>Orr', '<CMD>Octo review resume<CR>', desc = 'Octo Review resume' },
-    { '<leader>OrR', refresh_review, desc = 'Octo Review refresh threads' },
+    { '<leader>Ors', '<CMD>Octo review<CR>', desc = 'Octo Review start/resume' },
+    { '<leader>Orr', refresh_review, desc = 'Octo Review refresh threads' },
     {
       '<leader>Ofc',
       function()
