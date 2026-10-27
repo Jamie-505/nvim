@@ -7,6 +7,7 @@ return {
   dependencies = {
     {
       'tpope/vim-fugitive',
+      lazy = false,
       keys = {
         { '<leader>Ga', '<CMD>Git add -p<CR>', desc = 'Git add -p' },
         { '<leader>Gc', '<CMD>Git commit<CR>', desc = 'Git commit' },
