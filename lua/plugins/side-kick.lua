@@ -123,6 +123,13 @@ return {
         desc = 'Sidekick send file',
       },
       {
+        '<leader>ag',
+        function()
+          require('sidekick.cli').toggle({ name = 'copilot', focus = true })
+        end,
+        desc = 'Sidekick toggle Github copilot',
+      },
+      {
         '<leader>ao',
         function()
           require('sidekick.cli').toggle({ name = 'opencode', focus = true })
