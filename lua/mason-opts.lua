@@ -154,6 +154,7 @@ M.options = {
   PATH = 'skip',
 
   ui = {
+    border = 'rounded',
     icons = {
       package_pending = ' ',
       package_installed = '󰄳 ',

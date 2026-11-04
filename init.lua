@@ -28,6 +28,7 @@ require('lazy').setup({
   defaults = { lazy = true },
 
   ui = {
+    border = 'rounded',
     icons = {
       ft = '',
       lazy = '󰂠 ',
