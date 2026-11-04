@@ -1,0 +1,28 @@
+// Application launch support for Neovim's run configs (lua/run-configs.lua),
+// passed with `-I` to every Spring Boot launch; never written into a project.
+//
+// For every `bootRun` task:
+// - always: the JMX and Actuator settings the Spring language server's live
+//   data needs, and `spring.boot.project.name` (the Gradle project name) so
+//   the server can tell which project a running app belongs to
+// - `-PrunMainClass=<fqcn>`: the run configuration's main class
+// - `-Pnvim.run.jvmArgsFile=<file>`: the run configuration's VM options, one
+//   argument per line
+def props = gradle.startParameter.projectProperties
+def mainClass = props['runMainClass']
+def jvmArgsFile = props['nvim.run.jvmArgsFile']
+
+allprojects { p ->
+  p.tasks.matching { it.name == 'bootRun' }.configureEach { t ->
+    t.systemProperty('spring.jmx.enabled', 'true')
+    t.systemProperty('management.endpoints.jmx.exposure.include', '*')
+    t.systemProperty('spring.boot.project.name', p.name)
+    t.systemProperty('management.endpoint.env.show-values', 'always')
+    if (mainClass) {
+      t.mainClass.set(mainClass)
+    }
+    if (jvmArgsFile) {
+      t.jvmArgs(new File(jvmArgsFile).readLines().findAll { !it.isEmpty() })
+    }
+  }
+}

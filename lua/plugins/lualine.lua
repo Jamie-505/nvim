@@ -150,6 +150,24 @@ return {
           color = { fg = catppuccin_colors.mauve },
         },
         {
+          -- active Gradle quality run (lua/kotlin-quality); only loaded once used
+          function()
+            local mod = package.loaded['kotlin-quality']
+            return mod and mod.status() or ''
+          end,
+          color = { fg = catppuccin_colors.peach },
+        },
+        {
+          -- JVM heap of kotlin-lsp / Spring LS / Gradle daemons / app (lua/jvm-mem);
+          -- each process turns red on its own above 75% of its max
+          'jvm_mem',
+          cond = function()
+            return require('jvm-mem').cond()
+          end,
+          ok = catppuccin_colors.overlay1,
+          warn = catppuccin_colors.red,
+        },
+        {
           'lsp_status',
           icon = '',
           symbols = {

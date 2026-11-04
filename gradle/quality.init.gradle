@@ -1,0 +1,103 @@
+// Quality-check support for Neovim's `<leader>k` runner (lua/kotlin-quality).
+// Passed with `-I`; never written into a project. Does nothing unless one of
+// these project properties is set:
+//
+//   -Pnvim.quality.discover=<file>  write every Gradle project with its detekt
+//                                   and ktlint tasks to <file> as JSON
+//   -Pnvim.quality.runDir=<dir>     write Checkstyle XML reports for every
+//                                   detekt and ktlint report task into
+//                                   <dir>/reports/<project>/<task>.xml
+//
+// The plugin classes aren't on this script's classpath, so tasks are matched
+// by class name and configured through Groovy's dynamic dispatch.
+
+def props = gradle.startParameter.projectProperties
+def discoverFile = props['nvim.quality.discover']
+def runDir = props['nvim.quality.runDir']
+
+def isDetekt = { t -> t.class.name.startsWith('dev.detekt.gradle.Detekt_') || t.class.name == 'dev.detekt.gradle.Detekt' }
+def isKtlintReport = { t -> t.class.name.startsWith('org.jlleitschuh.gradle.ktlint.tasks.GenerateReportsTask') }
+def isKtlintWorker = { t -> t.class.name.startsWith('org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask') || t.class.name.startsWith('org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask') }
+def safeName = { p -> p.path == ':' ? 'root' : p.path.substring(1).replace(':', '-') }
+
+if (runDir) {
+  allprojects { p ->
+    def reports = new File(runDir, "reports/${safeName(p)}")
+    p.pluginManager.withPlugin('org.jlleitschuh.gradle.ktlint') {
+      // checkstyle is the format the runner parses; add it next to whatever
+      // reporters the build already configures
+      def ext = p.extensions.findByName('ktlint')
+      def type = ext.class.classLoader.loadClass('org.jlleitschuh.gradle.ktlint.reporter.ReporterType')
+      ext.reporters { reporter(type.CHECKSTYLE) }
+    }
+    // after the build script, so its own report settings don't win
+    p.afterEvaluate {
+      p.tasks.configureEach { t ->
+        if (isDetekt(t)) {
+          t.reports.checkstyle.required.set(true)
+          t.reports.checkstyle.outputLocation.set(new File(reports, "${t.name}.xml"))
+        } else if (isKtlintReport(t)) {
+          t.reportsOutputDirectory.set(reports)
+        }
+      }
+    }
+  }
+}
+
+if (discoverFile) {
+  gradle.projectsEvaluated { g ->
+    def projects = []
+    g.rootProject.allprojects.each { p ->
+      def detekt = []
+      def ktlint = []
+      def format = null
+      def workers = p.tasks.findAll { isKtlintWorker(it) }.collectEntries { [(it.name): it.path] }
+      p.tasks.each { t ->
+        if (isDetekt(t)) {
+          // detekt 2 registers three kinds: `detekt` (all sources, untyped),
+          // detekt<X>SourceSet (untyped) and detekt<X> (typed, "with type
+          // resolution" in its description)
+          def typed = (t.description ?: '').contains('type resolution')
+          def kind = t.name == 'detekt' ? 'untyped-all' : (typed ? 'typed' : 'untyped')
+          def m = t.name =~ /^detekt(.+?)(SourceSet)?$/
+          def sourceSet = m.matches() ? m.group(1).uncapitalize() : 'all'
+          detekt << [name: t.name, path: t.path, kind: kind, sourceSet: sourceSet, basePath: t.basePath.getOrNull()]
+        } else if (isKtlintReport(t)) {
+          // ktlint<X>SourceSetCheck reports what runKtlintCheckOver<X>SourceSet
+          // found; ktlintKotlinScriptCheck pairs with runKtlintCheckOverKotlinScripts.
+          // Resolving the real dependency here would need other projects' locks.
+          def m = t.name =~ /^ktlint(.+?)(SourceSet)?(Check|Format)$/
+          def kind = t.name.endsWith('Format') ? 'format' : 'check'
+          def worker = null
+          if (m.matches()) {
+            def subject = m.group(1) + (m.group(2) ? 'SourceSet' : 's')
+            worker = workers["run${m.group(3) == 'Check' ? 'KtlintCheckOver' : 'KtlintFormatOver'}${subject}".toString()]
+          }
+          def sourceSet = m.matches() && m.group(2) ? m.group(1).uncapitalize() : 'kotlinScripts'
+          ktlint << [name: t.name, path: t.path, kind: kind, worker: worker, sourceSet: sourceSet]
+        } else if (t.name == 'ktlintFormat') {
+          format = t.path
+        }
+      }
+      def buildFile = p.buildFile
+      projects << [
+        path: p.path,
+        dir: p.projectDir.absolutePath,
+        buildFile: buildFile?.exists() ? buildFile.absolutePath : null,
+        buildDir: p.layout.buildDirectory.get().asFile.absolutePath,
+        detekt: detekt.sort { it.name },
+        ktlint: ktlint.sort { it.name },
+        ktlintFormat: format,
+      ]
+    }
+    def root = g.rootProject
+    def out = [
+      rootDir: root.projectDir.absolutePath,
+      gradleVersion: g.gradleVersion,
+      projects: projects,
+    ]
+    def target = new File(discoverFile)
+    target.parentFile.mkdirs()
+    target.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(out))
+  }
+}

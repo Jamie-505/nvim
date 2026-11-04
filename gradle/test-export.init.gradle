@@ -1,0 +1,78 @@
+// Test support for Neovim's neotest setup (lua/kotlin-workflow/neotest.lua).
+// Passed with `-I`; never written into a project. Inert unless one of these
+// project properties is set:
+//
+//   -Pnvim.test.debugPort=<port>   with `--debug-jvm`: the test JVM listens on
+//                                  127.0.0.1:<port> and waits for the debugger
+//   -Pnvim.test.export=<file>      with -Pnvim.test.dir=<project dir>,
+//                                  -Pnvim.test.task=<Test task name> and the
+//                                  task `nvimTestExport`: compile the test
+//                                  classes and write the task's runtime
+//                                  classpath, JVM args, system properties,
+//                                  environment overrides, working dir and java
+//                                  executable to <file> as JSON, for running
+//                                  one parameterized invocation outside Gradle
+//
+// Environment: only entries the build sets or changes are exported, never the
+// inherited process environment, so no secret from the shell lands on disk.
+
+def props = gradle.startParameter.projectProperties
+def debugPort = props['nvim.test.debugPort']
+def exportFile = props['nvim.test.export']
+def exportDir = props['nvim.test.dir']
+def exportTask = props['nvim.test.task']
+
+if (debugPort) {
+  allprojects {
+    tasks.withType(Test).configureEach { t ->
+      t.debugOptions { d ->
+        d.port.set(Integer.parseInt(debugPort))
+        d.host.set('127.0.0.1')
+        d.server.set(true)
+        d.suspend.set(true)
+      }
+    }
+  }
+}
+
+if (exportFile && exportDir && exportTask) {
+  gradle.projectsEvaluated { g ->
+    def wanted = new File(exportDir).canonicalFile
+    def project = g.rootProject.allprojects.find { it.projectDir.canonicalFile == wanted }
+    def test = project?.tasks?.findByName(exportTask)
+    if (test == null) {
+      throw new GradleException("nvim test export: no task ${exportTask} in a project at ${exportDir}")
+    }
+    g.rootProject.tasks.register('nvimTestExport') { task ->
+      task.dependsOn(test.classpath)
+      task.dependsOn(test.testClassesDirs)
+      task.outputs.upToDateWhen { false }
+      task.doLast {
+        def inherited = System.getenv()
+        def env = [:]
+        test.environment.each { k, v ->
+          if (inherited[k] != v?.toString()) env[k] = v?.toString()
+        }
+        def java = null
+        try {
+          java = test.javaLauncher.get().executablePath.asFile.absolutePath
+        } catch (ignored) {
+          java = test.executable
+        }
+        def out = [
+          task: test.path,
+          classpath: test.classpath.files.collect { it.absolutePath },
+          testClassesDirs: test.testClassesDirs.files.collect { it.absolutePath },
+          jvmArgs: test.allJvmArgs.findAll { !it.startsWith('-agentlib:jdwp') },
+          systemProperties: test.systemProperties.collectEntries { k, v -> [(k): v?.toString()] },
+          environment: env,
+          workingDir: test.workingDir.absolutePath,
+          java: java,
+        ]
+        def target = new File(exportFile)
+        target.parentFile.mkdirs()
+        target.text = groovy.json.JsonOutput.toJson(out)
+      }
+    }
+  }
+}

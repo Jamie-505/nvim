@@ -66,6 +66,7 @@ return {
     { '<leader>Gp', '<cmd>Gradle<cr>', desc = 'Gradle Projects' },
     { '<leader>GF', '<cmd>GradleFavorites<cr>', desc = 'Gradle Favorite Commands' },
     { '<leader>Gr', function() require('run-configs').pick() end, desc = 'Gradle IntelliJ Run Configs' },
+    { '<leader>Gd', function() require('run-configs').pick({ debug = true }) end, desc = 'Gradle Debug IntelliJ Run Config' },
     { '<leader>Gt', function() require('run-configs').toggle() end, desc = 'Gradle Toggle run config terminal' },
     { '<leader>Gl', function() require('run-configs').filter() end, desc = 'Gradle Filter run config log levels' },
   },

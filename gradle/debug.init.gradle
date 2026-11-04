@@ -1,0 +1,18 @@
+// `<leader>Gd`: with -Pnvim.debugPort=<port>, every `bootRun` JVM listens for
+// JDWP on 127.0.0.1:<port> and waits (suspend=y) until Neovim attaches through
+// a fresh kotlin-lsp DAP bridge. Passed with `-I`; never written into a project.
+def port = gradle.startParameter.projectProperties['nvim.debugPort']
+
+if (port) {
+  allprojects {
+    tasks.matching { it.name == 'bootRun' }.configureEach { t ->
+      t.debugOptions { d ->
+        d.enabled.set(true)
+        d.host.set('127.0.0.1')
+        d.port.set(Integer.parseInt(port))
+        d.server.set(true)
+        d.suspend.set(true)
+      }
+    }
+  }
+}

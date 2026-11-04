@@ -63,8 +63,31 @@ return {
         desc = 'Debug Widgets hover',
       },
       { '<leader>dr', '<CMD>DapToggleRepl<CR>', desc = 'Debug Toggle Repl' },
-      { '<leader>dd', '<CMD>DapDisconnect<CR>', desc = 'Debug Disconnect' },
-      { '<leader>dt', '<CMD>DapTerminate<CR>', desc = 'Debug Terminate' },
+      {
+        '<leader>dd',
+        function()
+          -- the debuggee keeps running (an app started with <leader>Gd keeps serving)
+          require('dap').disconnect({ terminateDebuggee = false })
+        end,
+        desc = 'Debug Disconnect (keep the program running)',
+      },
+      {
+        '<leader>dt',
+        function()
+          -- stops the JVM; a <leader>Gd launch also gets SIGINT to its Gradle job
+          local dap = require('dap')
+          local session = dap.session()
+          local job = session and session.config and session.config.kotlin_workflow_job
+          dap.terminate()
+          if job then
+            local ok, pid = pcall(vim.fn.jobpid, job)
+            if ok and pid then
+              vim.uv.kill(pid, 'sigint')
+            end
+          end
+        end,
+        desc = 'Debug Terminate (stop the program)',
+      },
       {
         '<leader>dus',
         function()

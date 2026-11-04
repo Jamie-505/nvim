@@ -1,0 +1,46 @@
+// Spring Boot language server classpath for Kotlin projects without jdtls
+// (lua/spring-classpath). Passed with `-I`; never written into a project.
+//
+// With -Pnvim.spring.export=<file> and the task `nvimSpringClasspath`: compile
+// every JVM project's main classes (kapt/annotation processing included, so
+// spring-configuration-metadata.json exists) and write each project's source
+// dirs, output dirs, runtime classpath and build file to <file> as JSON.
+def exportFile = gradle.startParameter.projectProperties['nvim.spring.export']
+
+if (exportFile) {
+  gradle.projectsEvaluated { g ->
+    def jvmProjects = g.rootProject.allprojects.findAll { p ->
+      def ss = p.extensions.findByName('sourceSets')
+      ss != null && ss.findByName('main') != null
+    }
+    g.rootProject.tasks.register('nvimSpringClasspath') { task ->
+      jvmProjects.each { p -> task.dependsOn("${p.path == ':' ? '' : p.path}:classes") }
+      task.outputs.upToDateWhen { false }
+      task.doLast {
+        def modules = jvmProjects.collect { p ->
+          def main = p.extensions.getByName('sourceSets').getByName('main')
+          [
+            name: p.name,
+            path: p.path,
+            dir: p.projectDir.absolutePath,
+            uri: p.projectDir.toURI().toString(),
+            buildFile: p.buildFile.absolutePath,
+            sourceDirs: main.allSource.srcDirs.collect { it.absolutePath },
+            resourceDirs: main.resources.srcDirs.collect { it.absolutePath },
+            classesDirs: main.output.classesDirs.files.collect { it.absolutePath },
+            resourcesDir: main.output.resourcesDir?.absolutePath,
+            outputDirs: main.output.files.collect { it.absolutePath },
+            runtimeClasspath: main.runtimeClasspath.files.collect { it.absolutePath },
+          ]
+        }
+        def target = new File(exportFile)
+        target.parentFile.mkdirs()
+        target.text = groovy.json.JsonOutput.toJson([
+          rootDir: g.rootProject.projectDir.absolutePath,
+          gradleVersion: g.gradleVersion,
+          modules: modules,
+        ])
+      }
+    }
+  }
+}

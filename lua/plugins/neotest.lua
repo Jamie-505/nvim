@@ -13,78 +13,84 @@ return {
   -- commit = '52fca6717ef972113ddd6ca223e30ad0abb2800c',
   cmd = 'Neotest',
   event = { 'BufEnter *spec*', 'BufEnter *test*' },
-  keys = {
-    {
-      '<leader>Td',
-      function()
-        require('neotest').run.run({ strategy = 'dap' })
-      end,
-      desc = 'Test Debug nearest',
-    },
-    {
-      '<leader>TD',
-      function()
-        require('neotest').run.run({ vim.fn.expand('%'), strategy = 'dap' })
-      end,
-      desc = 'Test Debug file',
-    },
-    {
-      '<leader>Tr',
-      function()
-        require('neotest').run.run()
-      end,
-      desc = 'Test Run nearest',
-    },
-    {
-      '<leader>TR',
-      function()
-        require('neotest').run.run(vim.fn.expand('%'))
-      end,
-      desc = 'Test Run file',
-    },
-    {
-      '<leader>TS',
-      function()
-        require('neotest').summary.toggle()
-      end,
-      desc = 'Test Toggle summary',
-    },
-    {
-      '<leader>To',
-      function()
-        require('neotest').output.open({ enter = true, auto_close = true })
-      end,
-      desc = 'Test Output for nearest',
-    },
-    {
-      '<leader>TO',
-      function()
-        require('neotest').output_panel.toggle()
-      end,
-      desc = 'Test Toggle output panel',
-    },
-    {
-      '<leader>Tl',
-      function()
-        require('neotest').run.run_last()
-      end,
-      desc = 'Test Run last',
-    },
-    {
-      '<leader>TL',
-      function()
-        require('neotest').run.run_last({ strategy = 'dap' })
-      end,
-      desc = 'Test Debug last',
-    },
-    {
-      '<leader>Ts',
-      function()
-        require('neotest').run.stop()
-      end,
-      desc = 'Test Stop',
-    },
-  },
+  keys = function()
+    local function kw()
+      return require('kotlin-workflow.neotest')
+    end
+    local function run(target, debug)
+      return function()
+        local args = type(target) == 'function' and target() or target
+        if debug then
+          args = type(args) == 'table' and args or { args }
+          args.strategy = kw().debug_strategy
+        end
+        require('neotest').run.run(args)
+      end
+    end
+    local function file()
+      return vim.fn.expand('%:p')
+    end
+    -- the Gradle module of the current file (the dir holding its `src`)
+    local function module()
+      return require('neotest-gradle.hooks.find_project_directory')(vim.fn.expand('%:p'))
+    end
+    -- the Gradle build root (settings file), i.e. every module
+    local function project()
+      return require('neotest-gradle').root(vim.fn.expand('%:p')) or vim.fn.getcwd()
+    end
+    return {
+      { '<leader>Tr', run(nil), desc = 'Test Run nearest' },
+      { '<leader>TR', run(file), desc = 'Test Run file' },
+      { '<leader>Tm', run(module), desc = 'Test Run module' },
+      { '<leader>Ta', run(project), desc = 'Test Run all (project)' },
+      { '<leader>Td', run(nil, true), desc = 'Test Debug nearest' },
+      { '<leader>TD', run(file, true), desc = 'Test Debug file' },
+      { '<leader>TM', run(module, true), desc = 'Test Debug module' },
+      { '<leader>TA', run(project, true), desc = 'Test Debug all (project)' },
+      {
+        '<leader>Tl',
+        function()
+          require('neotest').run.run_last()
+        end,
+        desc = 'Test Run last',
+      },
+      {
+        '<leader>TL',
+        function()
+          require('neotest').run.run_last({ strategy = kw().debug_strategy })
+        end,
+        desc = 'Test Debug last',
+      },
+      {
+        '<leader>Ts',
+        function()
+          kw().stop()
+        end,
+        desc = 'Test Stop (SIGINT)',
+      },
+      {
+        '<leader>TS',
+        function()
+          require('neotest').summary.toggle()
+        end,
+        desc = 'Test Toggle summary',
+      },
+      {
+        '<leader>To',
+        function()
+          require('neotest').output.open({ enter = true, auto_close = true })
+        end,
+        desc = 'Test Output for nearest',
+      },
+      {
+        '<leader>TO',
+        function()
+          require('neotest').output_panel.toggle()
+        end,
+        desc = 'Test Toggle output panel',
+      },
+    }
+  end,
   opts = function()
     -- neotest-gradle only recognises `*Test.kt` / `*Test.java`, while the kotlin
     -- koans name their test files `tests.kt`. it also resolves the gradle project
@@ -122,31 +128,6 @@ return {
       return name:match('^[Tt]est') ~= nil or name:match('Test%.kt$') ~= nil or name:match('Test%.java$') ~= nil
     end
 
-    -- junit4 koans annotate with `@Test(timeout = 1000)`, which parses as
-    -- `annotation -> constructor_invocation`. the shipped query only matches a
-    -- bare `annotation -> user_type`, so no test positions were discovered.
-    package.loaded['neotest-gradle.position_queries.kotlin'] = require('neotest-gradle.position_queries.kotlin')
-      .. [[
-    (
-      (function_declaration
-        (modifiers
-          (annotation (constructor_invocation (user_type (type_identifier) @test_marker.identifier)))
-        )
-        (simple_identifier) @test.name
-      )
-      (#eq? @test_marker.identifier "Test")
-    ) @test.definition
-  ]]
-
-    -- position ids are built as `<package>.<class>.<test>`, so a file without a
-    -- package declaration (every koan) yields a leading dot that never matches
-    -- the `classname.name` the junit xml reports back, and lands in the gradle
-    -- `--tests` filter as `.TestStart`
-    local build_identifier = require('neotest-gradle.hooks.discover_positions.build_position_identifier')
-    local function position_id(position, parents)
-      return (build_identifier(position, parents):gsub('^%.', ''))
-    end
-
     -- discovery normally runs in neotest's `-u NONE` child process, which never
     -- sees the patches above. passing the hooks as functions instead of the
     -- adapter's `require(...)` strings makes neotest parse in this process.
@@ -162,20 +143,22 @@ return {
     gradle.root = function(path)
       return reactor_root(path) or gradle_root(path)
     end
-    local build_position = require('neotest-gradle.hooks.discover_positions.build_position')
-
-    gradle.discover_positions = function(path)
-      local query = position_queries[require('plenary.filetype').detect(path)]
-      if not query then
-        return nil
-      end
-      -- `_parse_positions` is the in-process path; the public one would hand the
-      -- job to the child, notice the function hooks and fall back with a warning
-      return require('neotest.lib').treesitter._parse_positions(path, query, {
-        build_position = build_position,
-        position_id = position_id,
-      })
+    -- positions, run specs, results and the run/debug strategy for Gradle
+    -- projects live in kotlin-workflow.neotest: argv without a shell,
+    -- `Outer$Inner` filters, display-name matching, `[n]` parameterized
+    -- children, SIGINT on stop and debug through a fresh kotlin-lsp bridge.
+    -- the junit4 koans' `@Test(timeout = 1000)` is covered by its query.
+    local kw = require('kotlin-workflow.neotest')
+    -- kapt writes Java stubs of every test class under build/tmp/kapt3/stubs,
+    -- which would register each test twice under the same id
+    -- build output holds copies of sources (kapt stubs; Eclipse-model `bin/`)
+    local skip = { build = true, bin = true, out = true, ['.gradle'] = true, ['.kotlin'] = true, node_modules = true }
+    gradle.filter_dir = function(name)
+      return not skip[name]
     end
+    gradle.discover_positions = kw.discover_positions
+    gradle.build_spec = kw.build_spec
+    gradle.results = kw.results
 
     local ui = require('neotest.lib.ui')
     local open_buf = ui.open_buf
@@ -195,74 +178,15 @@ return {
       return open_buf(bufnr, line, column)
     end
 
-    -- the adapter concatenates its argv into a single shell string, so a koan
-    -- folder like `Default arguments` splits into two shell words and gradle
-    -- runs in the wrong dir. re-quote the executable and the project dir.
-    -- the adapter hardcodes the `test` task, so a custom source set never runs:
-    -- its classes aren't on `test`'s testClassesDirs, the `--tests` filter matches
-    -- nothing, and the reports land under a different directory. gradle names the
-    -- Test task after the source set, which is the path segment after `src/`.
-    local function gradle_test_task(path)
-      return path:match('/src/([^/]+)/') or 'test'
-    end
-
-    local build_spec = gradle.build_spec
-    gradle.build_spec = function(args)
-      local spec = build_spec(args)
-      local path = args.tree:data().path
-      local dir = require('neotest-gradle.hooks.find_project_directory')(path)
-      local task = gradle_test_task(path)
-      if spec and spec.command and dir then
-        spec.command = (
-          spec.command:gsub('^(.-)%s+%-%-project%-dir%s+' .. vim.pesc(dir) .. '%s+test', function(executable)
-            return vim.fn.shellescape(executable) .. ' --project-dir ' .. vim.fn.shellescape(dir) .. ' ' .. task
-          end)
-        )
-      end
-      -- gradle 9 dropped the `testResultsDir` project property, so the adapter's
-      -- `properties --property testResultsDir` prints "null" and it builds the
-      -- path "null/test". resolve the task's real report directory instead.
-      if spec and dir then
-        spec.context = spec.context or {}
-        local expected = vim.fs.joinpath(dir, 'build', 'test-results', task)
-        local reported = spec.context.test_resuls_directory
-        if vim.fn.isdirectory(expected) == 1 or not reported or reported == '' or vim.fn.isdirectory(reported) == 0 then
-          spec.context.test_resuls_directory = expected
-        end
-      end
-      return spec
-    end
-
-    -- when gradle fails before writing any junit report the adapter asserts on
-    -- the missing directory and throws a traceback over the run. the output
-    -- panel already carries the real error, so just report no results.
-    local collect_results = gradle.results
-    gradle.results = function(spec, run_result, tree)
-      local directory = (spec.context or {}).test_resuls_directory
-      if not directory or vim.fn.isdirectory(directory) == 0 then
-        -- returning `{}` would leave the positions in `running` forever, so the
-        -- summary just spins. mark them failed and point at the output panel.
-        local failed = {}
-        for _, position in tree:iter() do
-          if position.type == 'test' or position.type == 'namespace' then
-            failed[position.id] = {
-              status = 'failed',
-              short = 'no junit reports at ' .. tostring(directory) .. ' - see the output panel',
-            }
-          end
-        end
-        return failed
-      end
-      return collect_results(spec, run_result, tree)
-    end
-
     return {
       floating = { border = 'rounded' },
+      default_strategy = kw.run_strategy,
       -- koans.nvim's panel, repainted whenever a run finishes. Neotest only
       -- registers consumers here, and koans is `cond`-gated on being inside a
       -- course, so this is the inlined form of `neotest_consumer()` rather than
       -- a call to it. See |koans-neotest|.
       consumers = {
+        kotlin_workflow = kw.consumer,
         koan = function(client)
           client.listeners.results = function()
             -- the listener runs inside an nio task

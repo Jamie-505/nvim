@@ -11,7 +11,7 @@ local filetype_map = {
   javascript = { 'prettier' },
   javascriptreact = { 'prettier' },
   json = {},
-  kotlin = { 'ktlint' },
+  -- kotlin is formatted only by Gradle ktlintFormat (<leader>kf, lua/kotlin-quality)
   lua = { 'stylua' },
   sh = { 'shfmt' },
   typescript = { 'prettier' },
@@ -33,6 +33,9 @@ return {
     {
       '<leader>bf',
       function()
+        if vim.bo.filetype == 'kotlin' then
+          return vim.notify('Kotlin formats with Gradle ktlintFormat: <leader>kf / <leader>kF', vim.log.levels.INFO)
+        end
         require('conform').format({ lsp_format = 'fallback' })
       end,
       desc = 'General Format file',
@@ -98,6 +101,10 @@ return {
       format_after_save = function(bufnr)
         -- Disable with a global or buffer-local variable
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
+        -- no format-on-save for Kotlin, not even through the LSP fallback
+        if vim.bo[bufnr].filetype == 'kotlin' then
           return
         end
         return { lsp_format = 'fallback' }

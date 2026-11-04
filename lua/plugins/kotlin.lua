@@ -22,13 +22,36 @@ return {
     { '<leader>kl', '<CMD>KotlinShowLogs<CR>', desc = 'Kotlin Show logs' },
     { '<leader>kw', '<CMD>KotlinCleanWorkspace<CR>', desc = 'Kotlin Wipe workspace' },
   },
+  init = function()
+    -- quality checks run through Gradle only, so these work without the
+    -- server (and without loading this plugin)
+    local function q(fn)
+      return function()
+        require('kotlin-quality')[fn]()
+      end
+    end
+    local map = function(lhs, fn, desc)
+      vim.keymap.set('n', lhs, q(fn), { desc = desc })
+    end
+    map('<leader>kq', 'check', 'Kotlin Quality check project')
+    map('<leader>kQ', 'check_modules', 'Kotlin Quality check modules')
+    map('<leader>ku', 'check_untyped', 'Kotlin Quality fast untyped detekt')
+    map('<leader>kf', 'format', 'Kotlin Format project (ktlintFormat)')
+    map('<leader>kF', 'format_modules', 'Kotlin Format modules (ktlintFormat)')
+    map('<leader>kx', 'cancel', 'Kotlin Quality cancel run')
+    map('<leader>kr', 'open_log', 'Kotlin Quality last run log')
+    -- grn / <leader>lr / <leader>lR on kotlin-lsp buffers: guarded rename
+    require('guarded-rename').setup()
+  end,
   opts = function()
     return {
       -- the server bundles its own JBR to *run*; this is the JDK it analyzes
       -- against, and auto-detection reads $JAVA_HOME, which points at the
       -- active asdf install
       jdk_for_symbol_resolution = require('jdk').find('25'),
-      jvm_args = { '-Xmx4g' },
+      -- a fresh index of the trial sample peaked at ~6 GiB RSS with -Xmx4g;
+      -- warm sessions sit around 1.2 GiB. the heap may grow to 8 GiB, no -Xms.
+      jvm_args = { '-Xmx8g' },
     }
   end,
   config = function(_, opts)

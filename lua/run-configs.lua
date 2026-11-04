@@ -4,7 +4,54 @@
 -- `<root>/.idea/runConfigurations/*.xml` and the RunManager in `.idea/workspace.xml`.
 -- Spring Boot configs map to `bootRun --args=...`, Gradle configs run their tasks
 -- and script parameters as-is. Other types (JUnit, Dart, ...) are skipped.
+--
+-- Spring Boot launches always get `gradle/run.init.gradle` (main class, VM
+-- options, the JMX/Actuator settings live data needs); `<leader>Gd` adds
+-- `gradle/debug.init.gradle` (JDWP, suspend=y, free loopback port) and attaches
+-- through a fresh kotlin-lsp bridge once the JVM listens. Env entries with an
+-- empty value aren't passed: the launch inherits Neovim's environment, which is
+-- where secrets come from (the picker warns when such a variable is unset).
 local M = {}
+
+local CONFIG = vim.fn.stdpath('config')
+local RUN_INIT = CONFIG .. '/gradle/run.init.gradle'
+local DEBUG_INIT = CONFIG .. '/gradle/debug.init.gradle'
+
+--- IntelliJ VM options → argv (whitespace-separated, double quotes group)
+local function split_args(s)
+  local out, cur, quoted, any = {}, {}, false, false
+  for ch in (s or ''):gmatch('.') do
+    if ch == '"' then
+      quoted, any = not quoted, true
+    elseif ch:match('%s') and not quoted then
+      if any then
+        table.insert(out, table.concat(cur))
+      end
+      cur, any = {}, false
+    else
+      table.insert(cur, ch)
+      any = true
+    end
+  end
+  if any then
+    table.insert(out, table.concat(cur))
+  end
+  return out
+end
+
+--- env entries with a value; names of empty ones are returned separately
+local function split_env(env)
+  local set, inherit = {}, {}
+  for k, v in pairs(env) do
+    if v == '' then
+      table.insert(inherit, k)
+    else
+      set[k] = v
+    end
+  end
+  table.sort(inherit)
+  return set, inherit
+end
 
 local ENTITIES = { quot = '"', apos = "'", amp = '&', lt = '<', gt = '>' }
 
@@ -113,17 +160,17 @@ local function spring_boot(cfg, project_dir, gradlew)
     table.insert(cmd, vim.fn.shellescape('--args=' .. table.concat(args, ' ')))
   end
 
-  local notes = {}
-  if (option(cfg, 'VM_PARAMETERS') or '') ~= '' then
-    table.insert(notes, 'VM options ignored: ' .. option(cfg, 'VM_PARAMETERS'))
-  end
+  local set, inherit = split_env(env)
   return {
     kind = 'Spring Boot',
     cmd = table.concat(cmd, ' '),
     cwd = expand(option(cfg, 'WORKING_DIRECTORY'), project_dir) or project_dir,
-    env = env,
+    env = set,
+    inherit_env = inherit,
     main_class = option(cfg, 'SPRING_BOOT_MAIN_CLASS'),
-    notes = notes,
+    vm_args = split_args(option(cfg, 'VM_PARAMETERS')),
+    inject = true,
+    notes = {},
   }
 end
 
@@ -144,11 +191,13 @@ local function gradle(cfg, project_dir, gradlew)
   for _, e in ipairs(children(map, 'entry')) do
     env[e.attrs.key] = expand(e.attrs.value, project_dir) or ''
   end
+  local set, inherit = split_env(env)
   return {
     kind = 'Gradle',
     cmd = table.concat(cmd, ' '),
     cwd = expand(option(settings, 'externalProjectPath'), project_dir) or project_dir,
-    env = env,
+    env = set,
+    inherit_env = inherit,
     notes = {},
   }
 end
@@ -553,11 +602,93 @@ local function drop_state(buf)
   end
 end
 
-M.run = function(entry)
+--- the shell command for a launch: the config's own plus the injected init scripts
+local function launch_cmd(entry, debug_port)
+  if not entry.inject then
+    return entry.cmd
+  end
+  local extra = { '-I', RUN_INIT }
+  if entry.main_class and entry.main_class ~= '' then
+    table.insert(extra, '-PrunMainClass=' .. entry.main_class)
+  end
+  if entry.vm_args and #entry.vm_args > 0 then
+    local dir = vim.fn.stdpath('state') .. '/run-configs'
+    vim.fn.mkdir(dir, 'p')
+    local file = dir .. '/' .. entry.name:gsub('[^%w%-_.]', '_') .. '.jvmargs'
+    vim.fn.writefile(entry.vm_args, file)
+    table.insert(extra, '-Pnvim.run.jvmArgsFile=' .. file)
+  end
+  if debug_port then
+    vim.list_extend(extra, { '-I', DEBUG_INIT, '-Pnvim.debugPort=' .. debug_port })
+  end
+  return entry.cmd .. ' ' .. table.concat(vim.tbl_map(vim.fn.shellescape, extra), ' ')
+end
+
+--- run name → terminal of a launch that may still be running
+local by_name = {}
+
+local function job_running(term)
+  local job = term and term:buf_valid() and vim.b[term.buf].terminal_job_id
+  return job and vim.fn.jobwait({ job }, 0)[1] == -1, job
+end
+
+--- Watch a launch's output: register the app JVM (Spring Boot logs its PID)
+--- and, for a debug launch, attach once JDWP listens.
+local function watch(term, entry, debug_port)
+  local jobs = require('kotlin-workflow.jobs')
+  local job = vim.b[term.buf].terminal_job_id
+  local ok, client_pid = pcall(vim.fn.jobpid, job)
+  if ok and client_pid then
+    jobs.add({ pid = client_pid, kind = 'gradle-client', label = 'bootRun ' .. entry.name, root = entry.cwd })
+  end
+  local attached, app = debug_port == nil, false
+  vim.api.nvim_buf_attach(term.buf, false, {
+    on_lines = function(_, buf, _, first, _, last)
+      if attached and app then
+        return true -- detach
+      end
+      -- the terminal wraps long lines at its width (two run terminals side by
+      -- side are half width), so also match the lines joined back together
+      local lines = vim.api.nvim_buf_get_lines(buf, math.max(first - 2, 0), last, false)
+      local text = table.concat(lines, '\n') .. '\n' .. table.concat(lines, '')
+      if not attached and require('kotlin-workflow.debug').listening_port(text) == debug_port then
+        attached = true
+        vim.schedule(function()
+          require('kotlin-workflow.debug').attach(debug_port, entry.name, { kotlin_workflow_job = job })
+        end)
+      end
+      local pid = not app and table.concat(lines, ''):match('with PID (%d+)')
+      if pid then
+        app = true
+        vim.schedule(function()
+          jobs.add({ pid = tonumber(pid), kind = 'app', label = entry.name, root = entry.cwd, debug_port = debug_port })
+        end)
+      end
+    end,
+  })
+end
+
+--- @param entry table a collected config
+--- @param opts? { debug?: boolean }
+M.run = function(entry, opts)
+  opts = opts or {}
+  local previous = by_name[entry.name]
+  if job_running(previous) then
+    M.last_term = previous
+    show_active(states[previous.buf] or { term = previous }, true)
+    Snacks.notify.warn('Already running; stop it first (<C-c> in its terminal, or <leader>dt when debugging)', { title = entry.name })
+    return
+  end
+  if opts.debug and not entry.inject then
+    Snacks.notify.warn('Debug launches need a Spring Boot run config (bootRun)', { title = entry.name })
+    return
+  end
+  local debug_port = opts.debug and require('kotlin-workflow.debug').free_port() or nil
+  local cmd = launch_cmd(entry, debug_port)
   -- terminal buffers only show the program's own ANSI colors. under gradle the
   -- app has no System.console(), so spring boot's `detect` turns colored logs off.
   local env = vim.tbl_extend('keep', entry.env, { SPRING_OUTPUT_ANSI_ENABLED = 'always' })
-  local opts = {
+  local term_opts = {
     cwd = entry.cwd,
     env = env,
     count = 1, -- part of the terminal id; keep it stable regardless of v:count
@@ -570,7 +701,7 @@ M.run = function(entry)
     -- open beside the code without stealing focus; follow() keeps it tailing
     win = { position = 'bottom', height = 0.35, enter = false },
   }
-  local term = Snacks.terminal.get(entry.cmd, vim.tbl_extend('force', opts, { create = false }))
+  local term = Snacks.terminal.get(cmd, vim.tbl_extend('force', term_opts, { create = false }))
   if term then
     local job = vim.b[term.buf].terminal_job_id
     if job and vim.fn.jobwait({ job }, 0)[1] == -1 then
@@ -587,8 +718,10 @@ M.run = function(entry)
       vim.api.nvim_buf_delete(buf, { force = true })
     end
   end
-  term = Snacks.terminal.get(entry.cmd, opts)
+  term = Snacks.terminal.get(cmd, term_opts)
   M.last_term = term
+  by_name[entry.name] = term
+  watch(term, entry, debug_port)
   states[term.buf] = { term = term, name = entry.name }
   follow(term.buf)
   vim.keymap.set('n', 'f', M.filter, { buffer = term.buf, desc = 'Filter log levels' })
@@ -628,7 +761,9 @@ M.toggle = function()
   end
 end
 
-M.pick = function()
+--- @param opts? { debug?: boolean }
+M.pick = function(opts)
+  opts = opts or {}
   local root = find_root()
   local configs = M.collect(root)
   if #configs == 0 then
@@ -636,14 +771,26 @@ M.pick = function()
     return
   end
   vim.ui.select(configs, {
-    prompt = 'IntelliJ run configs',
+    prompt = opts.debug and 'Debug IntelliJ run config' or 'IntelliJ run configs',
     format_item = function(e)
       return string.format('%s  [%s]  %s', e.name, e.kind, e.cmd:gsub('^%S+/gradlew', './gradlew'))
     end,
   }, function(entry)
-    if entry then
-      M.run(entry)
+    if not entry then
+      return
     end
+    local unset = vim.tbl_filter(function(name)
+      return vim.env[name] == nil
+    end, entry.inherit_env or {})
+    if #unset > 0 then
+      Snacks.notify.warn(
+        ('Empty in the run config and unset in this Neovim: %s. Export them before starting Neovim (secrets stay out of run configs).'):format(
+          table.concat(unset, ', ')
+        ),
+        { title = entry.name }
+      )
+    end
+    M.run(entry, opts)
   end)
 end
 

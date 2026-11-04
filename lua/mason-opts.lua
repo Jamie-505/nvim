@@ -37,7 +37,7 @@ end
 M.filetype_linter_map = function()
   return {
     lua = 'luacheck',
-    kotlin = 'ktlint',
+    -- kotlin: no Mason ktlint; Gradle ktlint (lua/kotlin-quality) is the only source
     markdown = 'markdownlint',
     sh = 'shellcheck',
   }
