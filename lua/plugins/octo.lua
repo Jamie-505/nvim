@@ -127,7 +127,7 @@ end
 
 return {
   'pwntester/octo.nvim',
-  dir = vim.fn.expand('~/dev/private/octo.nvim'),
+  dir = vim.fn.expand('~/dev/private/github-forks/octo.nvim'),
   dependencies = {
     'nvim-lua/plenary.nvim',
     {
