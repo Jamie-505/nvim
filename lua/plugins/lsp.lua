@@ -308,7 +308,20 @@ return {
   },
   {
     'mason-org/mason.nvim',
-    cmd = { 'Mason', 'MasonInstall', 'MasonInstallAll', 'MasonUpdate' },
+    -- mason has no lockfile of its own; mason-lock records every installed
+    -- package version in `mason-lock.json` (committed, like lazy-lock.json) and
+    -- rewrites it on each install/uninstall. rollback: restore the file from
+    -- git, then `:MasonLockRestore`.
+    dependencies = { 'zapling/mason-lock.nvim' },
+    cmd = {
+      'Mason',
+      'MasonInstall',
+      'MasonInstallAll',
+      'MasonUninstall',
+      'MasonUpdate',
+      'MasonLock',
+      'MasonLockRestore',
+    },
     keys = {
       { '<leader>M', '<CMD>Mason<CR>', desc = 'Mason Open' },
     },
@@ -317,6 +330,7 @@ return {
     end,
     config = function(_, opts)
       require('mason').setup(opts.options)
+      require('mason-lock').setup({ lockfile_path = vim.fn.stdpath('config') .. '/mason-lock.json' })
 
       vim.api.nvim_create_user_command('MasonInstallAll', function()
         if opts.options.ensure_installed_mason_names and #opts.options.ensure_installed_mason_names > 0 then
