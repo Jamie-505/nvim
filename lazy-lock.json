@@ -10,7 +10,6 @@
   "conform.nvim": { "branch": "master", "commit": "016802de402556da54c36bd7359b441266b01cdd" },
   "cosh.nvim": { "branch": "master", "commit": "85c868907cbdb9508158706b668f2fa8b876d661" },
   "diffview.nvim": { "branch": "main", "commit": "4516612fe98ff56ae0415a259ff6361a89419b0a" },
-  "draven.nvim": { "branch": "main", "commit": "a48baae26ed9d21d4723e0615ca47ce8feeadc1b" },
   "dropbar.nvim": { "branch": "master", "commit": "f7c6fa21e2a7c32576e7a1791774a3736987f467" },
   "easy-dotnet.nvim": { "branch": "main", "commit": "09b2101fe0ad3092799201259387774c6247839a" },
   "flutter-tools.nvim": { "branch": "main", "commit": "7034ae42d5c67708db076d20937c269c6c6e8937" },
