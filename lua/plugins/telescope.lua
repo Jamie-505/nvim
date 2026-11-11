@@ -301,6 +301,16 @@ return {
     event = 'VeryLazy',
     config = function()
       require('telescope').load_extension('ui-select')
+      -- callers inside autocmds (e.g. kotlin.nvim's BufWritePost reload prompt)
+      -- open the picker mid-:write, which leaves the cursor in the results
+      -- window where <CR> isn't mapped. defer so the prompt gets focus.
+      local select = vim.ui.select
+      vim.ui.select = function(...)
+        local args = { ... }
+        vim.schedule(function()
+          select(unpack(args, 1, 3))
+        end)
+      end
     end,
   },
   {
