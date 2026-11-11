@@ -193,5 +193,14 @@ return {
       ['github-personal'] = 'github.com',
     },
     mappings_disable_default = false,
+    reviews = {
+      thread_window = {
+        style = 'float', -- show review threads/comment drafts in a float instead of the opposite diff window
+        width = 0.8, -- fraction of the editor width
+        height = 0.4, -- fraction of the diff window height
+        -- resize inside the float: <C-Right>/<C-Left>/<C-Down>/<C-Up>, reset with <C-w>=
+        border = 'rounded',
+      },
+    },
   },
 }
