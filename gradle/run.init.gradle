@@ -5,12 +5,37 @@
 // - always: the JMX and Actuator settings the Spring language server's live
 //   data needs, and `spring.boot.project.name` (the Gradle project name) so
 //   the server can tell which project a running app belongs to
-// - `-PrunMainClass=<fqcn>`: the run configuration's main class
+// - `-PrunMainClass=<fqcn>`: the run configuration's main class, resolved to
+//   the JVM entry point like IntelliJ does (see `entryPoint`)
 // - `-Pnvim.run.jvmArgsFile=<file>`: the run configuration's VM options, one
 //   argument per line
 def props = gradle.startParameter.projectProperties
 def mainClass = props['runMainClass']
 def jvmArgsFile = props['nvim.run.jvmArgsFile']
+
+// IntelliJ stores the application class (`Application`); the JVM needs the
+// class that has `main`. A Kotlin top-level `fun main` lives on the file facade
+// (`ApplicationKt`). Checked against the compiled classpath at execution time:
+// the class itself, then its `Kt` facade, then whatever Spring Boot resolved
+// itself (`resolveMainClassName`), which covers `@file:JvmName` and the like.
+def hasMain = { String name, ClassLoader cl ->
+  try {
+    def m = Class.forName(name, false, cl).getMethod('main', [String[]] as Class[])
+    java.lang.reflect.Modifier.isStatic(m.modifiers)
+  } catch (ReflectiveOperationException | LinkageError ignored) {
+    false
+  }
+}
+def entryPoint = { String requested, Set<File> classpath, File resolved ->
+  def cl = new URLClassLoader(classpath.collect { it.toURI().toURL() } as URL[], ClassLoader.platformClassLoader)
+  try {
+    def hit = [requested, requested + 'Kt'].find { hasMain(it, cl) }
+    if (hit) return hit
+  } finally {
+    cl.close()
+  }
+  resolved.exists() ? resolved.text.trim() : requested
+}
 
 allprojects { p ->
   p.tasks.matching { it.name == 'bootRun' }.configureEach { t ->
@@ -19,7 +44,8 @@ allprojects { p ->
     t.systemProperty('spring.boot.project.name', p.name)
     t.systemProperty('management.endpoint.env.show-values', 'always')
     if (mainClass) {
-      t.mainClass.set(mainClass)
+      def resolved = p.layout.buildDirectory.file('resolvedMainClassName')
+      t.mainClass.set(p.providers.provider { entryPoint(mainClass, t.classpath.files, resolved.get().asFile) })
     }
     if (jvmArgsFile) {
       t.jvmArgs(new File(jvmArgsFile).readLines().findAll { !it.isEmpty() })
