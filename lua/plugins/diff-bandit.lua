@@ -25,6 +25,9 @@ return {
     local p = require('catppuccin.palettes').get_palette('mocha')
     local blend = require('catppuccin.utils.colors').blend
     return {
+      git = {
+        panel = { view = 'tree' },
+      },
       ui = {
         theme = {
           -- tweak the alphas (0-1) to make a band stronger/weaker
