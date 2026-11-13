@@ -139,8 +139,8 @@ local function check_server()
     end
     local system_path = require('kotlin.workspace').system_path_for(c)
     if system_path then
-      h.info('Server log: ' .. system_path .. '/system/log/intellij-server.log (`<leader>kl`)')
-      h.info('Workspace (wipe with `<leader>kw`): ' .. system_path)
+      h.info('Server log: ' .. system_path .. '/system/log/intellij-server.log (`<leader>lL`)')
+      h.info('Workspace (wipe with `<leader>lW`): ' .. system_path)
     end
   end
 end

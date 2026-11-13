@@ -9,18 +9,12 @@ return {
   ft = 'kotlin',
   keys = {
     { '<leader>k', desc = '+Kotlin', mode = { 'n', 'x' } },
-    { '<leader>koi', '<CMD>KotlinOrganizeImports<CR>', desc = 'Kotlin Organize imports' },
-    { '<leader>kgt', '<CMD>KotlinTypeDefinition<CR>', desc = 'Kotlin Go to type definition' },
-    { '<leader>kgi', '<CMD>KotlinImplementation<CR>', desc = 'Kotlin Go to implementation' },
-    { '<leader>kci', '<CMD>KotlinIncomingCalls<CR>', desc = 'Kotlin Incoming calls' },
-    { '<leader>kco', '<CMD>KotlinOutgoingCalls<CR>', desc = 'Kotlin Outgoing calls' },
-    { '<leader>ks', '<CMD>KotlinSymbols<CR>', desc = 'Kotlin Document symbols' },
-    { '<leader>kS', '<CMD>KotlinWorkspaceSymbols<CR>', desc = 'Kotlin Workspace symbols' },
+    -- lsp actions live under the generic <leader>l prefix: go-to / calls / type
+    -- hierarchy / symbols / inlay hints come from lsp-opts (kotlin.nvim's
+    -- commands for those are thin wrappers); the kotlin implementations of
+    -- the rest are set per buffer on attach (see config). these are extras.
     { '<leader>kn', '<CMD>KotlinNewFromTemplate<CR>', desc = 'Kotlin New file from template' },
-    { '<leader>kh', '<CMD>KotlinInlayHintsToggle<CR>', desc = 'Kotlin Toggle inlay hints' },
     { '<leader>kd', '<CMD>KotlinDebug<CR>', desc = 'Kotlin Attach debugger' },
-    { '<leader>kl', '<CMD>KotlinShowLogs<CR>', desc = 'Kotlin Show logs' },
-    { '<leader>kw', '<CMD>KotlinCleanWorkspace<CR>', desc = 'Kotlin Wipe workspace' },
   },
   init = function()
     -- quality checks run through Gradle only, so these work without the
@@ -55,6 +49,27 @@ return {
     }
   end,
   config = function(_, opts)
+    -- expired EAP build (exit 7) → show changelog + one-key update
+    require('kotlin-workflow.update').setup(opts)
+
+    -- generic <leader>l keys, kotlin implementation (jdtls.lua has its own)
+    vim.api.nvim_create_autocmd('LspAttach', {
+      group = vim.api.nvim_create_augroup('KotlinLspKeys', { clear = true }),
+      callback = function(args)
+        local client = vim.lsp.get_client_by_id(args.data.client_id)
+        if not client or client.name ~= 'kotlin_lsp' then
+          return
+        end
+        local function map(lhs, rhs, desc)
+          vim.keymap.set('n', lhs, rhs, { buffer = args.buf, desc = desc })
+        end
+        map('<leader>loi', '<CMD>KotlinOrganizeImports<CR>', 'Lsp Organize imports (kotlin)')
+        map('<leader>lL', '<CMD>KotlinShowLogs<CR>', 'Lsp Show server logs (kotlin)')
+        map('<leader>lsr', '<CMD>lsp restart kotlin_lsp<CR>', 'Lsp Restart server (kotlin)')
+        map('<leader>lW', '<CMD>KotlinCleanWorkspace<CR>', 'Lsp Wipe workspace (kotlin)')
+      end,
+    })
+
     require('kotlin').setup(opts)
 
     -- setup() wires a `FileType kotlin` autocmd, but `ft = 'kotlin'` means this

@@ -148,6 +148,8 @@ M.capabilities = make_capabilities()
 local semantic_tokens_ok = {
   dockerls = true,
   jdtls = true,
+  -- properties vs locals vs params, extension functions, named args, labels
+  kotlin_lsp = true,
   lua_ls = true,
   -- no qmljs treesitter parser installed, so these tokens are the only
   -- structured highlighting qml gets
@@ -201,6 +203,55 @@ vim.api.nvim_create_autocmd('LspRequest', {
     end
   end,
 })
+--- Super/subtypes of the symbol under the cursor in a telescope picker, like
+--- the call hierarchy maps. telescope has no type hierarchy builtin and
+--- vim.lsp.buf.typehierarchy() only fills the quickfix list.
+--- @param kind 'supertypes'|'subtypes'
+local function type_hierarchy(kind)
+  local win = vim.api.nvim_get_current_win()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local client = vim.lsp.get_clients({ bufnr = bufnr, method = 'textDocument/prepareTypeHierarchy' })[1]
+  if not client then
+    return vim.notify('No attached server supports type hierarchy', vim.log.levels.WARN)
+  end
+  local params = vim.lsp.util.make_position_params(win, client.offset_encoding)
+  client:request('textDocument/prepareTypeHierarchy', params, function(err, items)
+    if err or not items or #items == 0 then
+      return vim.notify(err and err.message or 'No type under cursor', vim.log.levels.WARN)
+    end
+    client:request('typeHierarchy/' .. kind, { item = items[1] }, function(err2, result)
+      if err2 then
+        return vim.notify(err2.message, vim.log.levels.WARN)
+      end
+      if not result or #result == 0 then
+        return vim.notify(('No %s of %s'):format(kind, items[1].name), vim.log.levels.INFO)
+      end
+      local qf = {}
+      for _, it in ipairs(result) do
+        local pos = it.selectionRange.start
+        table.insert(qf, {
+          filename = vim.uri_to_fname(it.uri),
+          lnum = pos.line + 1,
+          col = pos.character + 1,
+          text = it.detail and (it.name .. '  ' .. it.detail) or it.name,
+        })
+      end
+      local conf = require('telescope.config').values
+      require('telescope.pickers')
+        .new({ initial_mode = 'normal', layout_config = { horizontal = { preview_width = 0.55 } } }, {
+          prompt_title = ('%s of %s'):format(kind == 'supertypes' and 'Supertypes' or 'Subtypes', items[1].name),
+          finder = require('telescope.finders').new_table({
+            results = qf,
+            entry_maker = require('telescope.make_entry').gen_from_quickfix({}),
+          }),
+          previewer = conf.qflist_previewer({}),
+          sorter = conf.generic_sorter({}),
+        })
+        :find()
+    end, bufnr)
+  end, bufnr)
+end
+
 M.setup_keymaps = function()
   local function opts(desc)
     return { desc = desc }
@@ -350,9 +401,20 @@ M.setup_keymaps = function()
       },
     })
   end, opts('Lsp Go to outgoing calls'))
+  map('n', '<leader>lgS', function()
+    send_lsp_notification('Go to supertypes: ')
+    type_hierarchy('supertypes')
+  end, opts('Lsp Go to supertypes'))
+  map('n', '<leader>lgs', function()
+    send_lsp_notification('Go to subtypes: ')
+    type_hierarchy('subtypes')
+  end, opts('Lsp Go to subtypes'))
   map('n', '<leader>lsh', function()
     require('lsp_signature').toggle_float_win()
   end, opts('Lsp Show signature help'))
+  map('n', '<leader>lws', function()
+    require('telescope.builtin').lsp_dynamic_workspace_symbols()
+  end, opts('Lsp Workspace symbols'))
   map('n', '<leader>lwa', vim.lsp.buf.add_workspace_folder, opts('Lsp Add workspace folder'))
   map('n', '<leader>lwr', vim.lsp.buf.remove_workspace_folder, opts('Lsp Remove workspace folder'))
   map({ 'n', 'v', 'x' }, '<leader>lca', vim.lsp.buf.code_action, opts('Lsp Code action'))

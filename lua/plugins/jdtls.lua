@@ -54,37 +54,13 @@ return {
   },
   ft = 'java',
   keys = {
+    -- lsp actions live under the generic <leader>l prefix, set per buffer on
+    -- attach (see LspAttach below); these are the java-only extras
     { '<leader>j', desc = '+Java', mode = { 'n', 'x' } },
-    { '<leader>joi', '<CMD>lua require("jdtls").organize_imports()<CR>', desc = 'Java Organize imports' },
-    { '<leader>jev', '<CMD>lua require("jdtls").extract_variable_all()<CR>', desc = 'Java Extract variable' },
-    { '<leader>jec', '<CMD>lua require("jdtls").extract_constant()<CR>', desc = 'Java Extract constant' },
-    {
-      '<leader>jev',
-      '<ESC><CMD>lua require("jdtls").extract_variable_all(true)<CR>',
-      mode = 'v',
-      desc = 'Java Extract variable',
-    },
-    {
-      '<leader>jec',
-      '<ESC><CMD>lua require("jdtls").extract_constant(true)<CR>',
-      mode = 'v',
-      desc = 'Java Extract constant',
-    },
-    {
-      '<leader>jem',
-      '<ESC><CMD>lua require("jdtls").extract_method(true)<CR>',
-      mode = 'v',
-      desc = 'Java Extract method',
-    },
-    { '<leader>jgs', '<CMD>lua require("jdtls").super_implementation()<CR>', desc = 'Java Go to super implementation' },
     { '<leader>jtc', '<CMD>lua require("jdtls.dap").test_class()<CR>', desc = 'Java Debug test class' },
     { '<leader>jtn', '<CMD>lua require("jdtls.dap").test_nearest_method()<CR>', desc = 'Java Debug nearest test' },
     { '<leader>jtp', '<CMD>lua require("jdtls.dap").pick_test()<CR>', desc = 'Java Debug pick test' },
     { '<leader>jb', '<CMD>JdtBytecode<CR>', desc = 'Java Show bytecode' },
-    { '<leader>jl', '<CMD>JdtShowLogs<CR>', desc = 'Java Show logs' },
-    { '<leader>jr', '<CMD>JdtRestart<CR>', desc = 'Java Restart language server' },
-    { '<leader>ju', '<CMD>JdtUpdateConfig<CR>', desc = 'Java Update project config' },
-    { '<leader>jw', '<CMD>JdtWipeDataAndRestart<CR>', desc = 'Java Wipe workspace and restart' },
   },
   opts = function()
     -- mason is lazy loaded on cmd/keys, force it so $MASON is set
@@ -238,6 +214,22 @@ return {
         if opts.dap_main then
           require('jdtls.dap').setup_dap_main_class_configs(opts.dap_main)
         end
+
+        -- generic <leader>l keys, java implementation (kotlin.lua has its own)
+        local function map(mode, lhs, rhs, desc)
+          vim.keymap.set(mode, lhs, rhs, { buffer = args.buf, desc = desc })
+        end
+        map('n', '<leader>loi', jdtls.organize_imports, 'Lsp Organize imports (java)')
+        map('n', '<leader>lev', jdtls.extract_variable_all, 'Lsp Extract variable (java)')
+        map('n', '<leader>lec', jdtls.extract_constant, 'Lsp Extract constant (java)')
+        map('v', '<leader>lev', '<ESC><CMD>lua require("jdtls").extract_variable_all(true)<CR>', 'Lsp Extract variable (java)')
+        map('v', '<leader>lec', '<ESC><CMD>lua require("jdtls").extract_constant(true)<CR>', 'Lsp Extract constant (java)')
+        map('v', '<leader>lem', '<ESC><CMD>lua require("jdtls").extract_method(true)<CR>', 'Lsp Extract method (java)')
+        map('n', '<leader>lgp', jdtls.super_implementation, 'Lsp Go to parent method (java)')
+        map('n', '<leader>lL', '<CMD>JdtShowLogs<CR>', 'Lsp Show server logs (java)')
+        map('n', '<leader>lsr', '<CMD>JdtRestart<CR>', 'Lsp Restart server (java)')
+        map('n', '<leader>lu', '<CMD>JdtUpdateConfig<CR>', 'Lsp Update project config (java)')
+        map('n', '<leader>lW', '<CMD>JdtWipeDataAndRestart<CR>', 'Lsp Wipe workspace and restart (java)')
       end,
     })
 

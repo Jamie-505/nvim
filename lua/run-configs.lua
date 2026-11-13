@@ -291,10 +291,16 @@ local MATCHES = {
   { 'DiagnosticOk', [[\v^BUILD SUCCESSFUL.*]] },
 }
 
--- the filtered view is a plain buffer, so spring's ANSI level colors are gone there
+-- the filtered view is a plain buffer, so spring's ANSI colors are gone there.
+-- `filetype=log` gives a base; these restore spring's layout on top of it:
+-- <timestamp> <LEVEL> <pid> --- [app] [thread] <logger> : msg
 local VIEW_MATCHES = {
   { 'DiagnosticInfo', [[\v<INFO>]] },
   { 'Comment', [[\v<(DEBUG|TRACE)>]] },
+  { 'Comment', [[\v^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?([+-]\d{2}:\d{2}|Z)?]] },
+  { 'Number', [[\v<(ERROR|WARN|INFO|DEBUG|TRACE)>\s+\zs\d+\ze\s+---]] },
+  { 'Comment', [=[\v\s\zs---\s(\[[^]]*\]\s*)+]=] },
+  { 'Identifier', [=[\v---\s(\[[^]]*\]\s*)+\zs\S+\ze\s+:\s]=] },
 }
 
 local function add_matches(win, extra)
@@ -305,6 +311,11 @@ local function add_matches(win, extra)
   for _, m in ipairs(vim.list_extend(vim.list_extend({}, MATCHES), extra or {})) do
     vim.fn.matchadd(m[1], m[2], 10, -1, { window = win })
   end
+  -- spring boot 3.2+ with micrometer tracing pads an empty trace/span id to a
+  -- ~50 column `[   ]` block when no span is active; hide it
+  vim.fn.matchadd('Conceal', [[\v\[\s{10,}\]\s?]], 11, -1, { window = win, conceal = '' })
+  vim.wo[win].conceallevel = 2
+  vim.wo[win].concealcursor = 'nvic'
 end
 
 --- Keep windows of `buf` scrolled to the bottom as output arrives: unfocused
@@ -442,6 +453,7 @@ local function ensure_view(state)
   local buf = vim.api.nvim_create_buf(false, true)
   vim.bo[buf].modifiable = false
   vim.bo[buf].bufhidden = 'hide'
+  vim.bo[buf].filetype = 'log'
   state.view_buf, state.shown, state.eff, state.cur, state.dirty = buf, {}, {}, {}, 0
   follow(buf)
 
@@ -478,6 +490,8 @@ local function ensure_view(state)
     end)
   end, { buf = true })
   vim.keymap.set('n', 'f', M.filter, { buffer = buf, desc = 'Filter log levels' })
+  vim.keymap.set('n', '<C-c>', function() M.stop() end, { buffer = buf, desc = 'Stop run config' })
+  vim.keymap.set('n', '<C-r>', function() M.restart() end, { buffer = buf, desc = 'Restart run config' })
 end
 
 --- @param levels string[]|nil nil/empty or containing ALL = raw terminal
@@ -607,7 +621,9 @@ local function launch_cmd(entry, debug_port)
   if not entry.inject then
     return entry.cmd
   end
-  local extra = { '-I', RUN_INIT }
+  -- bootRun never finishes while the app runs, so the rich console's progress
+  -- bar would sit at "93% EXECUTING" forever
+  local extra = { '--console=plain', '-I', RUN_INIT }
   if entry.main_class and entry.main_class ~= '' then
     table.insert(extra, '-PrunMainClass=' .. entry.main_class)
   end
@@ -632,8 +648,10 @@ local function job_running(term)
   return job and vim.fn.jobwait({ job }, 0)[1] == -1, job
 end
 
---- Watch a launch's output: register the app JVM (Spring Boot logs its PID)
---- and, for a debug launch, attach once JDWP listens.
+--- Watch a launch's output: register the app JVM (Spring Boot logs its PID),
+--- report when it's ready (or failed), and, for a debug launch, attach once
+--- JDWP listens. "Started X in N seconds" is logged on ApplicationReadyEvent,
+--- the same signal IntelliJ reads over JMX (SpringApplicationAdminMXBean.ready).
 local function watch(term, entry, debug_port)
   local jobs = require('kotlin-workflow.jobs')
   local job = vim.b[term.buf].terminal_job_id
@@ -641,10 +659,10 @@ local function watch(term, entry, debug_port)
   if ok and client_pid then
     jobs.add({ pid = client_pid, kind = 'gradle-client', label = 'bootRun ' .. entry.name, root = entry.cwd })
   end
-  local attached, app = debug_port == nil, false
+  local attached, app, done = debug_port == nil, false, not entry.inject
   vim.api.nvim_buf_attach(term.buf, false, {
     on_lines = function(_, buf, _, first, _, last)
-      if attached and app then
+      if attached and app and done then
         return true -- detach
       end
       -- the terminal wraps long lines at its width (two run terminals side by
@@ -663,6 +681,21 @@ local function watch(term, entry, debug_port)
         vim.schedule(function()
           jobs.add({ pid = tonumber(pid), kind = 'app', label = entry.name, root = entry.cwd, debug_port = debug_port })
         end)
+      end
+      if not done then
+        local joined = table.concat(lines, '')
+        local secs = joined:match('Started %S+ in ([%d%.]+) seconds')
+        if secs then
+          done = true
+          vim.schedule(function()
+            Snacks.notify.info(('Started in %ss'):format(secs), { title = entry.name })
+          end)
+        elseif joined:find('APPLICATION FAILED TO START', 1, true) or joined:find('BUILD FAILED', 1, true) then
+          done = true
+          vim.schedule(function()
+            Snacks.notify.error('Failed to start', { title = entry.name })
+          end)
+        end
       end
     end,
   })
@@ -722,9 +755,11 @@ M.run = function(entry, opts)
   M.last_term = term
   by_name[entry.name] = term
   watch(term, entry, debug_port)
-  states[term.buf] = { term = term, name = entry.name }
+  states[term.buf] = { term = term, name = entry.name, entry = entry, opts = opts }
   follow(term.buf)
   vim.keymap.set('n', 'f', M.filter, { buffer = term.buf, desc = 'Filter log levels' })
+  vim.keymap.set('n', '<C-c>', function() M.stop() end, { buffer = term.buf, desc = 'Stop run config' })
+  vim.keymap.set('n', '<C-r>', function() M.restart() end, { buffer = term.buf, desc = 'Restart run config' })
   local term_buf = term.buf
   term:on('BufWipeout', function()
     drop_state(term_buf)
@@ -740,6 +775,68 @@ M.run = function(entry, opts)
   for _, note in ipairs(entry.notes) do
     Snacks.notify.warn(note, { title = entry.name })
   end
+end
+
+--- run state of a terminal buffer or of its filtered view
+local function state_for(buf)
+  if states[buf] then
+    return states[buf]
+  end
+  for _, s in pairs(states) do
+    if s.view_buf == buf then
+      return s
+    end
+  end
+end
+
+--- Interrupt the run shown in the current buffer, as <C-c> in terminal mode
+--- would: gradle passes the SIGINT on and the app shuts down gracefully.
+M.stop = function()
+  local state = state_for(vim.api.nvim_get_current_buf())
+  if not state then
+    return
+  end
+  local running, job = job_running(state.term)
+  if not running then
+    return Snacks.notify.info('Not running', { title = state.name })
+  end
+  vim.fn.chansend(job, '\3')
+end
+
+--- Stop the run shown in the current buffer (if running) and launch it again
+--- with the same config, debug mode and log filter.
+M.restart = function()
+  local state = state_for(vim.api.nvim_get_current_buf())
+  if not (state and state.entry) then
+    return
+  end
+  local entry, opts, levels = state.entry, state.opts, state.levels
+  local function relaunch()
+    M.run(entry, opts)
+    local new = M.last_term and states[M.last_term.buf]
+    if levels and new then
+      apply(new, vim.tbl_keys(levels))
+    end
+  end
+  local running, job = job_running(state.term)
+  if not running then
+    return relaunch()
+  end
+  vim.api.nvim_create_autocmd('TermClose', {
+    buffer = state.term.buf,
+    once = true,
+    callback = function()
+      vim.schedule(relaunch)
+    end,
+  })
+  Snacks.notify.info('Restarting…', { title = entry.name })
+  vim.fn.chansend(job, '\3')
+  -- graceful shutdown hung: kill it (TermClose still relaunches)
+  vim.defer_fn(function()
+    if job_running(state.term) then
+      vim.fn.jobstop(job)
+    end
+  end, 15000)
 end
 
 --- Show/hide the most recently started (or resumed) run config's log: the
